@@ -1,0 +1,3401 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlRoot">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClipGenius AI — Viral Shorts from YouTube</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            base: '#070B1A',
+            card: '#0D1430',
+            neon: '#8B5CF6',
+            cyanx: '#22D3EE',
+            gold: '#FACC15',
+            hook: '#EC4899'
+          },
+          fontFamily: {
+            cairo: ['Cairo', 'Inter', 'sans-serif'],
+            inter: ['Inter', 'Cairo', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <style>
+    * { font-family: 'Cairo', 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body { background: #070B1A; color: #E8ECFF; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0A1030; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(#8B5CF6, #22D3EE); border-radius: 20px; }
+    
+    .grad-text {
+      background: linear-gradient(90deg, #A78BFA, #22D3EE, #F472B6, #FACC15);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      background-size: 300% 100%;
+      animation: gradShift 6s linear infinite;
+    }
+    @keyframes gradShift { 0% { background-position: 0%; } 100% { background-position: 300%; } }
+
+    .glass {
+      background: rgba(16, 23, 55, 0.75);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(139, 92, 246, 0.22);
+    }
+    .glass-soft {
+      background: rgba(255, 255, 255, 0.045);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+    }
+    .neon-btn {
+      background: linear-gradient(135deg, #7C3AED, #4F46E5 40%, #06B6D4);
+      box-shadow: 0 10px 40px -8px rgba(124, 58, 237, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .neon-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 18px 50px -8px rgba(34, 211, 238, 0.6);
+    }
+    .gold-btn {
+      background: linear-gradient(135deg, #FACC15, #F59E0B);
+      color: #1A1200;
+      box-shadow: 0 10px 35px -8px rgba(250, 204, 21, 0.6);
+      transition: 0.3s;
+    }
+    .gold-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+
+    .blob {
+      position: fixed; border-radius: 50%; filter: blur(110px); opacity: 0.35;
+      pointer-events: none; z-index: 0; animation: floatBlob 14s ease-in-out infinite alternate;
+    }
+    @keyframes floatBlob {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(60px, -50px) scale(1.2); }
+    }
+    .grid-bg {
+      background-image: linear-gradient(rgba(139, 92, 246, 0.08) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(139, 92, 246, 0.08) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 60%, transparent 100%);
+    }
+    .card-hover { transition: 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .card-hover:hover {
+      transform: translateY(-6px);
+      border-color: rgba(34, 211, 238, 0.5);
+      box-shadow: 0 20px 50px -12px rgba(124, 58, 237, 0.45);
+    }
+
+    .shorts-frame {
+      aspect-ratio: 9 / 16;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      background: #000;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+    }
+    .shorts-frame img, .shorts-frame video { width: 100%; height: 100%; object-fit: cover; }
+    
+    .scanline {
+      position: absolute; inset: 0;
+      background: linear-gradient(transparent 0%, rgba(34, 211, 238, 0.22) 50%, transparent 100%);
+      height: 60px;
+      animation: scan 2.2s linear infinite;
+    }
+    @keyframes scan { 0% { top: -60px; } 100% { top: 100%; } }
+
+    .marquee { display: flex; gap: 1.5rem; animation: marq 24s linear infinite; width: max-content; }
+    @keyframes marq { to { transform: translateX(50%); } }
+    [dir="ltr"] .marquee { animation-name: marqL; }
+    @keyframes marqL { to { transform: translateX(-50%); } }
+
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .faq-open .faq-a { max-height: 320px; }
+    .faq-open .faq-icon { transform: rotate(45deg); }
+    .faq-icon { transition: 0.3s; }
+
+    input, select, textarea { outline: none; }
+    input:focus, select:focus {
+      border-color: #22D3EE !important;
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.22);
+    }
+    .pay-card {
+      cursor: pointer; transition: 0.3s; border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+    .pay-card.active {
+      border-color: #22D3EE;
+      background: rgba(34, 211, 238, 0.1);
+      box-shadow: 0 0 30px -8px rgba(34, 211, 238, 0.5);
+    }
+
+    .tpl { cursor: pointer; transition: 0.25s; border: 2px solid transparent; }
+    .tpl.active { border-color: #A78BFA; background: rgba(167, 139, 250, 0.15); box-shadow: 0 0 25px -6px #8B5CF6; }
+    
+    .hook-badge {
+      animation: pulseHook 2s infinite;
+      box-shadow: 0 0 15px rgba(236, 72, 153, 0.6);
+    }
+    @keyframes pulseHook {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    .tab-btn { transition: 0.25s; }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #7C3AED, #06B6D4);
+      color: white;
+      box-shadow: 0 8px 25px -8px #7C3AED;
+    }
+    .log-box { font-family: ui-monospace, monospace; font-size: 11.5px; line-height: 1.7; }
+    
+    .caption-word { transition: 0.2s; padding: 2px 6px; border-radius: 8px; }
+    .caption-word.on {
+      background: #FACC15;
+      color: #000;
+      font-weight: 900;
+      transform: scale(1.08);
+      display: inline-block;
+    }
+
+    .toast { animation: toastIn 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+    @keyframes toastIn { from { transform: translateY(20px) scale(0.95); opacity: 0; } }
+
+    .float-anim { animation: floaty 5s ease-in-out infinite; }
+    @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+    .pulse-dot { animation: pdot 1.6s infinite; }
+    @keyframes pdot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.6); }
+      50% { box-shadow: 0 0 0 9px rgba(34, 211, 238, 0); }
+    }
+
+    .shine { position: relative; overflow: hidden; }
+    .shine::after {
+      content: ''; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,0.25), transparent);
+      transform: skewX(-20deg);
+      animation: shine 3.5s infinite;
+    }
+    @keyframes shine { 0% { left: -80%; } 60%, 100% { left: 130%; } }
+
+    .sidebar-link.active {
+      background: linear-gradient(90deg, rgba(124, 58, 237, 0.35), rgba(34, 211, 238, 0.15));
+      border-color: rgba(34, 211, 238, 0.5) !important;
+      color: white;
+    }
+    .badge-pro {
+      background: linear-gradient(90deg, #FACC15, #FB923C);
+      color: #1A1200;
+      font-weight: 800;
+    }
+    .switch {
+      width: 48px; height: 26px; background: #1E2A5A; border-radius: 99px; position: relative;
+      cursor: pointer; transition: 0.3s; border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .switch::after {
+      content: ''; position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;
+      background: #fff; border-radius: 50%; transition: 0.3s;
+    }
+    [dir="ltr"] .switch::after { right: auto; left: 2px; }
+    .switch.on { background: linear-gradient(90deg, #7C3AED, #06B6D4); }
+    .switch.on::after { transform: translateX(-22px); }
+    [dir="ltr"] .switch.on::after { transform: translateX(22px); }
+    
+    input[type=range] { accent-color: #8B5CF6; }
+  </style>
+</head>
+<body class="min-h-screen relative text-slate-100">
+
+  <canvas id="particles" class="fixed inset-0 z-0 pointer-events-none opacity-60"></canvas>
+  <div class="blob w-[520px] h-[520px] bg-violet-700 -top-40 -right-40"></div>
+  <div class="blob w-[460px] h-[460px] bg-cyan-500 top-[35%] -left-52" style="animation-delay:-4s"></div>
+  <div class="blob w-[420px] h-[420px] bg-fuchsia-600 bottom-0 right-1/3" style="animation-delay:-8s;opacity:.25"></div>
+  <div class="fixed inset-0 z-0 grid-bg pointer-events-none"></div>
+
+  <!-- NAV -->
+  <nav class="fixed top-0 inset-x-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 mt-4">
+      <div class="glass rounded-2xl px-4 md:px-6 py-3 flex items-center justify-between gap-3 shadow-2xl">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="showView('landing')">
+          <div class="w-11 h-11 rounded-2xl grid place-items-center font-black text-xl text-white shadow-lg" style="background:linear-gradient(135deg,#7C3AED,#06B6D4 60%,#EC4899)">
+            ✂
+          </div>
+          <div class="leading-tight">
+            <div class="font-black text-lg">Clip<span class="grad-text">Genius</span> AI</div>
+            <div class="text-[11px] text-slate-400 -mt-1 font-mono">YouTube → AI Viral Shorts</div>
+          </div>
+          <div class="hidden md:flex items-center gap-1.5 ms-2 text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span> AI HOOK v4.8
+          </div>
+        </div>
+
+        <div class="hidden lg:flex items-center gap-7 text-sm font-semibold text-slate-300">
+          <a href="#features" class="hover:text-white transition" data-i18n="nav_features">المميزات</a>
+          <a href="#how" class="hover:text-white transition" data-i18n="nav_how">كيف يعمل</a>
+          <a href="#pricing" class="hover:text-white transition" data-i18n="nav_pricing">الأسعار</a>
+          <a href="#referral" class="hover:text-white transition" data-i18n="nav_referral">المكافآت (10=1 شهر)</a>
+          <a href="#faq" class="hover:text-white transition" data-i18n="nav_faq">الأسئلة</a>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Language Dropdown -->
+          <div class="relative">
+            <button onclick="document.getElementById('langMenu').classList.toggle('hidden')" class="glass-soft rounded-xl px-3 py-2 text-sm font-bold flex items-center gap-2 hover:border-cyan-400/50">
+              <i class="fa-solid fa-globe text-cyan-300"></i>
+              <span id="langLabel">العربية</span>
+              <i class="fa-solid fa-chevron-down text-[10px]"></i>
+            </button>
+            <div id="langMenu" class="hidden absolute top-12 end-0 glass rounded-xl overflow-hidden min-w-[150px] shadow-2xl z-50">
+              <button onclick="setLang('ar')" class="w-full text-start px-4 py-2.5 hover:bg-white/10 text-sm font-bold flex items-center gap-2">
+                <span>🇸🇦</span> العربية
+              </button>
+              <button onclick="setLang('en')" class="w-full text-start px-4 py-2.5 hover:bg-white/10 text-sm font-bold flex items-center gap-2">
+                <span>🇬🇧</span> English
+              </button>
+              <button onclick="setLang('fr')" class="w-full text-start px-4 py-2.5 hover:bg-white/10 text-sm font-bold flex items-center gap-2">
+                <span>🇫🇷</span> Français
+              </button>
+            </div>
+          </div>
+
+          <!-- Auth / Dash CTA -->
+          <button id="navAuthBtn" onclick="showView('auth')" class="hidden sm:block text-sm font-bold px-4 py-2 rounded-xl glass-soft hover:bg-white/10" data-i18n="nav_login">
+            تسجيل الدخول
+          </button>
+          <button onclick="onCta()" class="neon-btn shine text-sm font-extrabold px-5 py-2.5 rounded-xl text-white flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+            <span data-i18n="nav_cta">جرّب مجاناً (5 مقاطع)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ================= LANDING ================= -->
+  <div id="view-landing" class="relative z-10">
+    <!-- HERO -->
+    <header class="pt-32 md:pt-40 pb-10 px-4 max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
+      <div>
+        <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs font-bold text-cyan-200 mb-5">
+          <i class="fa-solid fa-bolt text-yellow-300"></i>
+          <span data-i18n="hero_badge">5 فيديوهات مجانية • تحكم يدوي بالمدة • محرك الهوكات الخاطفة</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-black leading-[1.18]">
+          <span data-i18n="hero_title_a">حوّل أي فيديو يوتيوب</span><br>
+          <span class="grad-text" data-i18n="hero_title_b">إلى شورتس بهوك فيروسي ومُدة مخصصة</span>
+        </h1>
+        <p class="mt-5 text-slate-300 text-base md:text-lg leading-relaxed" data-i18n="hero_sub">
+          الذكاء الاصطناعي يستخرج أفضل الهوكات (Hooks) النفسية لجذب أول 3 ثوانٍ، يقص الفيديو عمودياً 9:16 بمدتك التي تحددها يدوياً (15 إلى 90 ثانية)، ويضيف ترجمة كاريوكي حركية. 5 تجارب مجانية بدون بطاقة ثم 6$/شهر فقط!
+        </p>
+
+        <!-- URL INPUT BAR -->
+        <div class="mt-7 glass rounded-2xl p-2.5 flex flex-col sm:flex-row gap-2 shadow-2xl">
+          <div class="flex items-center flex-1 gap-2.5 px-3">
+            <i class="fa-brands fa-youtube text-red-500 text-2xl"></i>
+            <input id="heroUrl" placeholder="https://www.youtube.com/watch?v=..." data-i18n-ph="hero_input_ph" class="bg-transparent flex-1 py-3 text-sm placeholder:text-slate-500 border-0" style="box-shadow:none!important">
+          </div>
+          <button onclick="heroConvert()" class="neon-btn rounded-xl px-7 py-3.5 font-black text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-scissors"></i>
+            <span data-i18n="hero_btn">قص شورتس بهوك AI</span>
+          </button>
+        </div>
+
+        <div class="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+          <span>🎁 <b class="text-emerald-300" data-i18n="hero_free_note">5 فيديوهات مجانية للمبتدئين</b></span>
+          <span>•</span>
+          <span>⏱️ <b class="text-cyan-300" data-i18n="hero_dur_note">تحكم كامل بالمدة يدويّاً</b></span>
+          <span>•</span>
+          <span>💳 Visa / Mastercard / Binance</span>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="mt-8 flex items-center gap-4">
+          <div class="flex -space-x-3" style="direction:ltr">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces" class="w-10 h-10 rounded-full border-2 border-[#070B1A] object-cover">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces" class="w-10 h-10 rounded-full border-2 border-[#070B1A] object-cover">
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces" class="w-10 h-10 rounded-full border-2 border-[#070B1A] object-cover">
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces" class="w-10 h-10 rounded-full border-2 border-[#070B1A] object-cover">
+            <div class="w-10 h-10 rounded-full border-2 border-[#070B1A] bg-gradient-to-br from-violet-600 to-cyan-500 grid place-items-center text-xs font-black">+14k</div>
+          </div>
+          <div class="text-xs text-slate-400">
+            <div class="text-yellow-300 tracking-widest font-black">★★★★★ 4.9/5</div>
+            <b class="text-white">14,200+</b> <span data-i18n="trust">صانع محتوى وفريق تسويق يعتمد علينا</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- HERO VISUAL / MOCKUP -->
+      <div class="relative">
+        <div class="glass rounded-3xl p-5 shadow-2xl relative overflow-hidden">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-red-500"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+              <span class="w-3 h-3 rounded-full bg-green-400"></span>
+            </div>
+            <div class="text-[11px] font-bold text-slate-400 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span> HOOK DETECTION ACTIVE
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div class="shorts-frame float-anim">
+              <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=700&fit=crop" alt="Short preview">
+              <div class="scanline"></div>
+              <div class="absolute top-2 start-2 text-[9px] font-black bg-pink-500 text-white px-2 py-0.5 rounded-full hook-badge">🎯 HOOK 99%</div>
+              <div class="absolute top-2 end-2 text-[10px] font-black bg-black/80 text-cyan-300 px-2 py-0.5 rounded-full">30s ⏱️</div>
+              <div class="absolute bottom-3 inset-x-2 text-center">
+                <span class="caption-word on text-[11px] bg-yellow-300 text-black">لا تتخطى! السر هنا 🤫</span>
+              </div>
+            </div>
+
+            <div class="shorts-frame float-anim mt-6" style="animation-delay:-1.5s">
+              <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&h=700&fit=crop" alt="Short preview">
+              <div class="absolute top-2 start-2 text-[9px] font-black bg-yellow-400 text-black px-2 py-0.5 rounded-full">⚡ VIRAL 96%</div>
+              <div class="absolute top-2 end-2 text-[10px] font-black bg-black/80 text-cyan-300 px-2 py-0.5 rounded-full">45s ⏱️</div>
+              <div class="absolute bottom-3 inset-x-2 text-center">
+                <span class="caption-word on text-[11px] bg-cyan-300 text-black">المشهد الصادم! 🤯</span>
+              </div>
+            </div>
+
+            <div class="shorts-frame float-anim" style="animation-delay:-3s">
+              <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=700&fit=crop" alt="Short preview">
+              <div class="absolute top-2 start-2 text-[9px] font-black bg-fuchsia-500 text-white px-2 py-0.5 rounded-full">🔥 RETENTION 94%</div>
+              <div class="absolute top-2 end-2 text-[10px] font-black bg-black/80 text-cyan-300 px-2 py-0.5 rounded-full">60s ⏱️</div>
+              <div class="absolute bottom-3 inset-x-2 text-center">
+                <span class="caption-word on text-[11px] bg-purple-500 text-white">النهاية صدمت 3M شخص!</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 glass-soft rounded-2xl p-3 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl grid place-items-center bg-gradient-to-br from-pink-500 to-violet-600 text-white font-black text-sm">
+              <i class="fa-solid fa-bullhorn"></i>
+            </div>
+            <div class="flex-1">
+              <div class="text-[11px] font-bold text-white flex justify-between">
+                <span>AI Hook: « 3 أخطاء تضيّع وقتك يومياً »</span>
+                <span class="text-pink-400 font-black">+420% CTR</span>
+              </div>
+              <div class="h-2 rounded bg-white/10 overflow-hidden mt-1.5">
+                <div class="h-full w-4/5 rounded bg-gradient-to-r from-pink-500 to-cyan-400"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="absolute -top-5 -start-5 glass rounded-2xl px-4 py-2.5 shadow-2xl float-anim hidden md:block">
+          <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Hook Score</div>
+          <div class="text-xl font-black text-pink-400">99.4 / 100 🎯</div>
+        </div>
+        <div class="absolute -bottom-5 -end-3 gold-btn rounded-2xl px-4 py-2.5 shadow-2xl float-anim hidden md:flex items-center gap-2">
+          <i class="fa-solid fa-gift text-lg"></i>
+          <div>
+            <div class="text-xs font-black">نظام المكافآت: 10 مشتركين</div>
+            <div class="text-[10px] opacity-80 font-bold">= 1 شهر PRO مجاني مدى الحياة</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- LOGOS MARQUEE -->
+    <div class="py-5 border-y border-white/10 bg-black/30 overflow-hidden" dir="ltr">
+      <div class="marquee" id="logoMarquee"></div>
+    </div>
+
+    <!-- STATS -->
+    <section class="max-w-7xl mx-auto px-4 py-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass rounded-2xl p-6 text-center card-hover">
+        <div class="text-3xl md:text-4xl font-black grad-text counter" data-target="3.4" data-suffix="M+">0</div>
+        <div class="text-xs md:text-sm text-slate-400 font-bold mt-1" data-i18n="stat1_l">شورت تم توليده بهوك</div>
+      </div>
+      <div class="glass rounded-2xl p-6 text-center card-hover">
+        <div class="text-3xl md:text-4xl font-black grad-text counter" data-target="14200" data-suffix="+">0</div>
+        <div class="text-xs md:text-sm text-slate-400 font-bold mt-1" data-i18n="stat2_l">صانع محتوى نشط</div>
+      </div>
+      <div class="glass rounded-2xl p-6 text-center card-hover">
+        <div class="text-3xl md:text-4xl font-black grad-text counter" data-target="90" data-suffix="s">0</div>
+        <div class="text-xs md:text-sm text-slate-400 font-bold mt-1" data-i18n="stat3_l">تحكم يدوي بمدة الشورت (10-90s)</div>
+      </div>
+      <div class="glass rounded-2xl p-6 text-center card-hover">
+        <div class="text-3xl md:text-4xl font-black grad-text counter" data-target="10" data-suffix=" = 1 Mo">0</div>
+        <div class="text-xs md:text-sm text-slate-400 font-bold mt-1" data-i18n="stat4_l">دعوة = شهر مجاني كامل</div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how" class="max-w-7xl mx-auto px-4 py-14">
+      <div class="text-center max-w-2xl mx-auto">
+        <div class="text-cyan-300 font-black text-sm tracking-widest uppercase" data-i18n="how_kicker">⚡ كيف يعمل — 4 خطوات بسيطة</div>
+        <h2 class="text-3xl md:text-5xl font-black mt-3" data-i18n="how_title">من رابط يوتيوب إلى مشاهدات بالملايين</h2>
+        <p class="text-slate-400 mt-3 text-sm md:text-base" data-i18n="how_sub">
+          الذكاء الاصطناعي لا يكتفي بالقص العشوائي، بل يستخرج الهوكات الفعالة ويضبط المدة المناسبة تماماً لاحتياجك.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-4 gap-5 mt-10">
+        <div class="glass rounded-3xl p-6 card-hover relative">
+          <div class="w-13 h-13 w-12 h-12 rounded-2xl grid place-items-center text-2xl mb-4 bg-gradient-to-tr from-red-600 to-orange-500">
+            <i class="fa-brands fa-youtube text-white"></i>
+          </div>
+          <div class="font-black text-lg" data-i18n="s1_t">1. الصق الرابط</div>
+          <p class="text-xs md:text-sm text-slate-400 mt-2" data-i18n="s1_d">ضع رابط بودكاست، مقابلة، فلوغ، محاضرة، مراجعة تقنية أو ألعاب حتى 3 ساعات.</p>
+        </div>
+
+        <div class="glass rounded-3xl p-6 card-hover relative">
+          <div class="w-12 h-12 rounded-2xl grid place-items-center text-2xl mb-4 bg-gradient-to-tr from-pink-600 to-rose-400">
+            <i class="fa-solid fa-bullhorn text-white"></i>
+          </div>
+          <div class="font-black text-lg" data-i18n="s2_t">2. اختر الهوك والمدة</div>
+          <p class="text-xs md:text-sm text-slate-400 mt-2" data-i18n="s2_d">حدد مدة الشورت يدوياً (15، 30، 60 ثانية أو مخصص) ونوع الهوك النفسي لجذب الانتباه فوراً.</p>
+        </div>
+
+        <div class="glass rounded-3xl p-6 card-hover relative">
+          <div class="w-12 h-12 rounded-2xl grid place-items-center text-2xl mb-4 bg-gradient-to-tr from-violet-600 to-cyan-500">
+            <i class="fa-solid fa-brain text-white"></i>
+          </div>
+          <div class="font-black text-lg" data-i18n="s3_t">3. AI يمنتج ويترجم</div>
+          <p class="text-xs md:text-sm text-slate-400 mt-2" data-i18n="s3_d">تتبع تلقائي للوجوه (9:16)، ترجمة متحركة بستايل MrBeast، وإزالة تلقائية للصمت والوقفات.</p>
+        </div>
+
+        <div class="glass rounded-3xl p-6 card-hover relative">
+          <div class="w-12 h-12 rounded-2xl grid place-items-center text-2xl mb-4 bg-gradient-to-tr from-amber-400 to-yellow-600 text-black">
+            <i class="fa-solid fa-rocket text-black"></i>
+          </div>
+          <div class="font-black text-lg" data-i18n="s4_t">4. انشر واربح</div>
+          <p class="text-xs md:text-sm text-slate-400 mt-2" data-i18n="s4_d">حمّل بجودة 4K جاهزة لتيك توك وريلز وشورتس، وشارك رابطك لتربح شهور PRO مجانية كل 10 مشتركين!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="max-w-7xl mx-auto px-4 py-14">
+      <div class="text-center max-w-2xl mx-auto">
+        <div class="text-pink-400 font-black text-sm tracking-widest uppercase" data-i18n="feat_kicker">✨ استوديو AI متكامل</div>
+        <h2 class="text-3xl md:text-5xl font-black mt-3" data-i18n="feat_title">كل ما تحتاجه للسيطرة على خوارزميات الشورتس</h2>
+        <p class="text-slate-400 mt-3 text-sm md:text-base" data-i18n="feat_sub">مصمم لصناع المحتوى والوكالات لتوفير 15 ساعة مونتاج أسبوعياً.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-5 mt-10" id="featGrid"></div>
+    </section>
+
+    <!-- LIVE DEMO / BEFORE & AFTER -->
+    <section id="demoSec" class="max-w-7xl mx-auto px-4 py-14">
+      <div class="glass rounded-[28px] p-6 md:p-10 grid lg:grid-cols-2 gap-8 items-center overflow-hidden relative">
+        <div>
+          <div class="text-yellow-300 font-black text-xs md:text-sm tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-fire"></i> <span data-i18n="demo_kicker">مثال واقعي — بودكاست تحول لشورت فيروسي</span>
+          </div>
+          <h3 class="text-2xl md:text-4xl font-black mt-3" data-i18n="demo_title">هوك قوي + تحديد يدوي بـ 35 ثانية = 3.2M مشاهدة</h3>
+          <p class="text-slate-300 mt-3 text-sm md:text-base leading-relaxed" data-i18n="demo_sub">
+            فيديو يوتيوب طويل تم تحديد مدته يدوياً بـ 35 ثانية مع توليد هوك من نوع (صدمة وفضول). النتيجة: قفزة بنسبة 450% في معدل إكمال المشاهدة والمتابعين الجدد.
+          </p>
+
+          <div class="flex flex-wrap gap-3 mt-6">
+            <button onclick="onCta()" class="neon-btn px-6 py-3 rounded-xl font-extrabold text-white text-sm">
+              <i class="fa-solid fa-sparkles"></i> <span data-i18n="cta_btn">جرّب بنفسك مجاناً (5 فيديوهات)</span>
+            </button>
+            <button onclick="openPrevDemo()" class="glass-soft px-6 py-3 rounded-xl font-bold text-sm hover:bg-white/10 flex items-center gap-2">
+              <i class="fa-solid fa-play text-cyan-300"></i> <span data-i18n="hero_watch">شاهد المعاينة الحية</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-white/10 text-center">
+            <div>
+              <div class="font-black text-2xl md:text-3xl text-pink-400">3.2M</div>
+              <div class="text-slate-400 text-xs">مشاهدة حقيقية</div>
+            </div>
+            <div>
+              <div class="font-black text-2xl md:text-3xl text-cyan-300">+62K</div>
+              <div class="text-slate-400 text-xs">مشترك جديد</div>
+            </div>
+            <div>
+              <div class="font-black text-2xl md:text-3xl text-yellow-300">92%</div>
+              <div class="text-slate-400 text-xs">معدل الاحتفاظ</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="shorts-frame">
+            <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400&h=700&fit=crop" alt="Demo short 1">
+            <div class="absolute top-2 start-2 bg-pink-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">HOOK: صدمة 🤯</div>
+            <div class="absolute top-2 end-2 bg-black/70 text-yellow-300 text-[10px] font-black px-2 py-0.5 rounded-full">30s</div>
+            <div class="absolute bottom-3 inset-x-2 text-center text-xs font-black bg-black/60 backdrop-blur py-1.5 rounded-lg border border-white/10">
+              « لا تصدق هذه الخدعة! ❌ »
+            </div>
+          </div>
+          <div class="shorts-frame">
+            <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=400&h=700&fit=crop" alt="Demo short 2">
+            <div class="absolute top-2 start-2 bg-cyan-500 text-black text-[10px] font-black px-2 py-0.5 rounded-full">HOOK: سر مغلق 🤫</div>
+            <div class="absolute top-2 end-2 bg-black/70 text-cyan-300 text-[10px] font-black px-2 py-0.5 rounded-full">45s</div>
+            <div class="absolute bottom-3 inset-x-2 text-center text-xs font-black bg-black/60 backdrop-blur py-1.5 rounded-lg border border-white/10">
+              « كيف تكسب أول 1,000$؟ 📈 »
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING ($6 / Month + Free Trial) -->
+    <section id="pricing" class="max-w-6xl mx-auto px-4 py-14">
+      <div class="text-center">
+        <div class="text-emerald-300 font-black text-sm tracking-widest uppercase" data-i18n="price_kicker">💎 أسعار لا تقبل المنافسة</div>
+        <h2 class="text-3xl md:text-5xl font-black mt-3" data-i18n="price_title">ابدأ مجاناً، ثم 6$ شهرياً فقط</h2>
+        <p class="text-slate-400 mt-3 text-sm md:text-base" data-i18n="price_sub">
+          نمنحك 5 فيديوهات مجانية لتتأكد من جودة الهوكات والمونتاج. بعدها اشتراك شهري بسيط بـ 6$ فقط مع خيارات دفع: فيزا، ماستركارد، وبينانس.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 mt-10 max-w-4xl mx-auto items-stretch">
+        <!-- FREE TIER -->
+        <div class="glass rounded-3xl p-8 card-hover flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="font-black text-xl text-slate-300" data-i18n="free_t">التجربة المجانية</span>
+              <span class="text-xs bg-white/10 text-slate-300 px-3 py-1 rounded-full font-bold">بدون بطاقة</span>
+            </div>
+            <div class="mt-4 flex items-baseline gap-1">
+              <span class="text-5xl font-black">$0</span>
+              <span class="text-slate-400 text-sm">/ 5 فيديوهات</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-2">جرّب كامل قدرات الذكاء الاصطناعي دون أي التزام مالي.</p>
+
+            <ul class="mt-6 space-y-3.5 text-sm text-slate-300">
+              <li class="flex items-center gap-2.5">
+                <i class="fa-solid fa-check text-emerald-400"></i>
+                <span data-i18n="free_f1">5 فيديوهات يوتيوب كاملة مجاناً</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <i class="fa-solid fa-check text-emerald-400"></i>
+                <span data-i18n="free_f2">تحكم يدوي بمدة الشورت (15s إلى 90s)</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <i class="fa-solid fa-check text-emerald-400"></i>
+                <span>توليد هوك AI لاقتناص المشاهدين</span>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <i class="fa-solid fa-check text-emerald-400"></i>
+                <span>ترجمة متحركة 1080p Full HD</span>
+              </li>
+              <li class="flex items-center gap-2.5 text-slate-500">
+                <i class="fa-solid fa-xmark"></i>
+                <span>تحميل غير محدود و 4K Ultra HD</span>
+              </li>
+            </ul>
+          </div>
+
+          <button onclick="onCta()" class="w-full mt-8 glass-soft rounded-2xl py-3.5 font-extrabold hover:bg-white/10 transition border border-white/15">
+            <span data-i18n="nav_cta">ابدأ بـ 5 فيديوهات مجاناً</span>
+          </button>
+        </div>
+
+        <!-- PRO PLAN ($6) -->
+        <div class="rounded-3xl p-[2.5px] relative card-hover flex flex-col justify-between" style="background:linear-gradient(135deg,#FACC15,#EC4899,#8B5CF6,#22D3EE)">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 text-[11px] font-black px-4 py-1 rounded-full text-black whitespace-nowrap shadow-xl" style="background:linear-gradient(90deg,#FACC15,#FB923C)">
+            🔥 الأكثر اختياراً — 6$ فقط شهرياً
+          </div>
+
+          <div class="bg-[#0A1030] rounded-[26px] p-8 h-full flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="font-black text-xl grad-text" data-i18n="pro_t">اشتراك PRO الكامل</span>
+                <span class="badge-pro text-xs px-2.5 py-1 rounded-full">VIP UNLIMITED</span>
+              </div>
+              <div class="mt-4 flex items-baseline gap-1">
+                <span class="text-6xl font-black grad-text">$6</span>
+                <span class="text-slate-400 text-sm font-bold">/ شهرياً (إلغاء بأي وقت)</span>
+              </div>
+              <p class="text-xs text-cyan-300 font-bold mt-2">✨ يشمل نظام المكافآت: كل 10 أصدقاء = شهر مجاناً!</p>
+
+              <ul class="mt-6 space-y-3.5 text-sm">
+                <li class="flex items-center gap-2.5">
+                  <span class="text-yellow-300">♾️</span>
+                  <b class="text-white" data-i18n="pro_f1">فيديوهات وتحويلات غير محدودة شهرياً</b>
+                </li>
+                <li class="flex items-center gap-2.5">
+                  <i class="fa-solid fa-sliders text-cyan-300"></i>
+                  <span class="text-slate-200" data-i18n="pro_f2">تحكم دقيق بالثواني (10s إلى 90s) لكل مقطع</span>
+                </li>
+                <li class="flex items-center gap-2.5">
+                  <i class="fa-solid fa-bullhorn text-pink-400"></i>
+                  <span class="text-slate-200">محرك الهوكات المتقدم (فضول، إثارة، صدمة، تعليم)</span>
+                </li>
+                <li class="flex items-center gap-2.5">
+                  <i class="fa-solid fa-video text-purple-400"></i>
+                  <span class="text-slate-200">جودة فائقة 4K بدون أي علامة مائية</span>
+                </li>
+                <li class="flex items-center gap-2.5">
+                  <i class="fa-solid fa-gift text-yellow-300"></i>
+                  <span class="text-slate-200 font-bold">رابط إحالة: 10 مشتركين = شهر مجاني يضاف لك</span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <button onclick="onSubscribe()" class="w-full mt-8 gold-btn rounded-2xl py-4 font-black text-base shine flex items-center justify-center gap-2">
+                <i class="fa-solid fa-crown"></i>
+                <span data-i18n="pro_btn">اشترك الآن بـ 6$ / شهر</span>
+              </button>
+
+              <div class="flex items-center justify-center gap-3 mt-4 text-[11px] text-slate-400">
+                <span class="flex items-center gap-1 font-bold text-white"><i class="fa-brands fa-cc-visa text-sky-400 text-base"></i> Visa</span>
+                <span>•</span>
+                <span class="flex items-center gap-1 font-bold text-white"><i class="fa-brands fa-cc-mastercard text-amber-500 text-base"></i> MasterCard</span>
+                <span>•</span>
+                <span class="flex items-center gap-1 font-bold text-[#F0B90B]"><i class="fa-solid fa-coins text-base"></i> Binance Pay</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REFERRAL REWARDS SECTION (10 FRIENDS = 1 FREE MONTH) -->
+    <section id="referral" class="max-w-7xl mx-auto px-4 py-14">
+      <div class="rounded-[28px] p-8 md:p-12 relative overflow-hidden" style="background:linear-gradient(135deg,#1E1B4B,#0E2A4A 50%,#3B0764)">
+        <div class="grid lg:grid-cols-2 gap-10 items-center relative">
+          <div>
+            <div class="text-yellow-300 font-black text-xs md:text-sm tracking-widest flex items-center gap-2">
+              <i class="fa-solid fa-gift text-base"></i> <span data-i18n="ref_kicker">نظام المكافآت الحصري — شارك واربح</span>
+            </div>
+            <h2 class="text-3xl md:text-5xl font-black mt-3 leading-tight" data-i18n="ref_title">
+              كل 10 أصدقاء يشتركون = <span class="text-yellow-300">شهر PRO مجاني لك!</span>
+            </h2>
+            <p class="text-slate-300 mt-4 text-sm md:text-base leading-relaxed" data-i18n="ref_sub">
+              عندما يشترك 10 أشخاص من خلال رابط الدعوة الخاص بك في باقة الـ 6$، يضاف إلى حسابك تلقائياً شهر مجاني كامل من اشتراك PRO. لا يوجد حد أقصى: 20 مشتركاً = شهران مجانيان، 50 مشتركاً = 5 أشهر!
+            </p>
+
+            <div class="grid sm:grid-cols-3 gap-3 mt-7">
+              <div class="bg-black/40 border border-white/10 rounded-2xl p-4">
+                <div class="text-2xl mb-1">🔗</div>
+                <div class="font-black text-sm" data-i18n="ref_step1_t">1. انسخ رابطك</div>
+                <div class="text-xs text-slate-400 mt-1" data-i18n="ref_step1_d">رابط فريد وكود خاص بحسابك</div>
+              </div>
+              <div class="bg-black/40 border border-white/10 rounded-2xl p-4">
+                <div class="text-2xl mb-1">📢</div>
+                <div class="font-black text-sm" data-i18n="ref_step2_t">2. شارك مع صناع المحتوى</div>
+                <div class="text-xs text-slate-400 mt-1" data-i18n="ref_step2_d">عبر تيك توك، واتساب، وتيليغرام</div>
+              </div>
+              <div class="bg-black/40 border border-white/10 rounded-2xl p-4">
+                <div class="text-2xl mb-1">🏆</div>
+                <div class="font-black text-sm" data-i18n="ref_step3_t">3. استمتع بالمجان</div>
+                <div class="text-xs text-slate-400 mt-1" data-i18n="ref_step3_d">تفعيل آلي فور وصول المشترك العاشر</div>
+              </div>
+            </div>
+
+            <button onclick="onCta()" class="mt-7 gold-btn px-8 py-3.5 rounded-xl font-black text-sm">
+              <i class="fa-solid fa-link me-1"></i> <span data-i18n="ref_cta">احصل على رابط الدعوة الآن</span>
+            </button>
+          </div>
+
+          <!-- Referral Tracker Preview -->
+          <div class="bg-black/50 border border-white/15 rounded-3xl p-6 backdrop-blur">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-black text-base">مقياس التقدم نحو الشهر المجاني</div>
+                <div class="text-xs text-slate-400">مشتركون عبر كود الدعوة الخاص بك</div>
+              </div>
+              <div class="text-sm font-black bg-yellow-300 text-black px-3 py-1 rounded-full">
+                7 / 10 مشتركين 🎯
+              </div>
+            </div>
+
+            <div class="h-4 bg-white/10 rounded-full mt-4 overflow-hidden relative">
+              <div class="h-full rounded-full transition-all duration-700" style="width:70%; background:linear-gradient(90deg,#FACC15,#EC4899,#22D3EE)"></div>
+            </div>
+
+            <div class="flex justify-between items-center text-xs text-slate-400 mt-2 font-mono">
+              <span>0 مشترك</span>
+              <span class="text-yellow-300 font-bold">باقي 3 مشتركين فقط! 🚀</span>
+              <span>10 = شهر مجاني 👑</span>
+            </div>
+
+            <div class="mt-6 bg-white/5 border border-white/10 rounded-2xl p-3 flex items-center gap-2 text-xs">
+              <code class="flex-1 truncate text-cyan-300 font-mono" dir="ltr">https://clipgenius.ai/r/DEMO-7X2K</code>
+              <button onclick="toast('تم نسخ الرابط النموذجي! 🎁','ok')" class="glass-soft px-3 py-2 rounded-lg font-bold hover:bg-white/20">
+                <i class="fa-solid fa-copy"></i>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mt-4 text-center text-xs font-bold">
+              <button onclick="toast('مشاركة عبر واتساب 📲','ok')" class="bg-[#25D366]/20 border border-[#25D366]/40 text-green-300 rounded-xl py-2.5">
+                <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
+              </button>
+              <button onclick="toast('مشاركة عبر تيليغرام ✈️','ok')" class="bg-sky-500/20 border border-sky-500/40 text-sky-300 rounded-xl py-2.5">
+                <i class="fa-brands fa-telegram text-sm"></i> Telegram
+              </button>
+              <button onclick="toast('مشاركة عبر تويتر X 🐦','ok')" class="bg-white/10 border border-white/20 rounded-xl py-2.5">
+                <i class="fa-brands fa-x-twitter text-sm"></i> X (Twitter)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAYMENT METHODS SUPPORTED -->
+    <section class="max-w-6xl mx-auto px-4 py-8">
+      <div class="glass rounded-3xl p-6 md:p-8 text-center">
+        <h3 class="font-black text-lg md:text-xl" data-i18n="pay_title">💳 طرق دفع عالمية آمنة وموثوقة 100%</h3>
+        <p class="text-slate-400 text-xs md:text-sm mt-1.5" data-i18n="pay_sub">
+          تشفير SSL 256-bit • دعم حماية 3D Secure • بدون مصاريف خفية • تفعيل فوري للاشتراك
+        </p>
+
+        <div class="flex flex-wrap justify-center items-center gap-4 mt-6">
+          <div class="bg-white rounded-2xl px-6 py-3 flex items-center gap-3 shadow-lg">
+            <span class="font-black italic text-[#1A1F71] text-2xl tracking-tighter">VISA</span>
+            <span class="text-xs text-slate-500 font-bold border-s border-slate-300 ps-2">Debit / Credit</span>
+          </div>
+
+          <div class="bg-white rounded-2xl px-6 py-3 flex items-center gap-3 shadow-lg">
+            <div class="flex" style="direction:ltr">
+              <span class="w-7 h-7 rounded-full bg-[#EB001B] inline-block"></span>
+              <span class="w-7 h-7 rounded-full bg-[#F79E1B] inline-block -ms-3 opacity-90"></span>
+            </div>
+            <span class="font-bold text-slate-800 text-base">Mastercard</span>
+          </div>
+
+          <div class="rounded-2xl px-6 py-3 flex items-center gap-3 shadow-lg bg-[#0B0E11] border border-[#F0B90B]/40">
+            <span class="text-[#F0B90B] text-2xl">⬢</span>
+            <div class="text-start">
+              <div class="text-white font-black text-sm leading-tight">BINANCE <span class="text-[#F0B90B]">Pay</span></div>
+              <div class="text-[10px] text-slate-400">Crypto • USDT / BUSD</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="max-w-3xl mx-auto px-4 py-14">
+      <div class="text-center">
+        <div class="text-cyan-300 font-black text-sm tracking-widest uppercase" data-i18n="faq_kicker">❓ الأسئلة المتكررة</div>
+        <h2 class="text-3xl md:text-4xl font-black mt-2" data-i18n="faq_title">كل ما تريد معرفته عن ClipGenius</h2>
+      </div>
+      <div class="mt-8 space-y-3" id="faqBox"></div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="max-w-6xl mx-auto px-4 pb-16">
+      <div class="rounded-[28px] p-8 md:p-14 text-center relative overflow-hidden shine" style="background:linear-gradient(135deg,#6D28D9,#4F46E5 40%,#0891B2)">
+        <h2 class="text-3xl md:text-5xl font-black text-white leading-tight" data-i18n="cta_title">جاهز لصناعة أول شورت بهوك فيروسي؟</h2>
+        <p class="text-white/85 mt-3 text-sm md:text-base max-w-xl mx-auto" data-i18n="cta_sub">
+          انضم لآلاف صناع المحتوى. 5 فيديوهات مجانية تنتظرك فور التسجيل بدون إدخال أي بطاقة.
+        </p>
+        <button onclick="onCta()" class="mt-7 bg-white text-[#4F46E5] font-black px-10 py-4 rounded-2xl text-base md:text-lg hover:scale-105 transition shadow-2xl">
+          <i class="fa-solid fa-wand-magic-sparkles me-2"></i> <span data-i18n="cta_btn">ابدأ بـ 5 فيديوهات مجاناً الآن</span>
+        </button>
+        <div class="mt-4 text-white/70 text-xs">لا حاجة لبطاقة بنكية • اشتراك 6$ شهري بعد التجربة • إلغاء في أي وقت</div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-white/10 bg-black/40 relative z-10">
+      <div class="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-4 gap-8 text-sm">
+        <div>
+          <div class="font-black text-lg">Clip<span class="grad-text">Genius</span> AI</div>
+          <p class="text-slate-400 mt-2 text-xs leading-relaxed" data-i18n="footer_desc">
+            المنصة الذكية الأولى لتحويل فيديوهات يوتيوب إلى مقاطع قصيرة بهوكات قوية لجذب ملايين المشاهدات مع تحكم دقيق بالمدة ونظام مكافآت كريم.
+          </p>
+          <div class="flex gap-2 mt-4">
+            <a class="w-8 h-8 rounded-lg glass-soft grid place-items-center hover:bg-white/15" href="#"><i class="fa-brands fa-tiktok text-xs"></i></a>
+            <a class="w-8 h-8 rounded-lg glass-soft grid place-items-center hover:bg-white/15" href="#"><i class="fa-brands fa-instagram text-xs"></i></a>
+            <a class="w-8 h-8 rounded-lg glass-soft grid place-items-center hover:bg-white/15" href="#"><i class="fa-brands fa-youtube text-red-400 text-xs"></i></a>
+            <a class="w-8 h-8 rounded-lg glass-soft grid place-items-center hover:bg-white/15" href="#"><i class="fa-brands fa-x-twitter text-xs"></i></a>
+          </div>
+        </div>
+
+        <div>
+          <div class="font-black mb-3 text-white" data-i18n="footer_prod">المنتج</div>
+          <div class="space-y-2 text-xs text-slate-400">
+            <a href="#features" class="block hover:text-white">المميزات وخوارزمية الهوك</a>
+            <a href="#pricing" class="block hover:text-white">الاشتراك (6$ شهرياً)</a>
+            <a href="#referral" class="block hover:text-white">نظام الـ 10 دعوات = شهر مجاني</a>
+            <a href="#how" class="block hover:text-white">تحديد مدة الشورت يدويّاً</a>
+          </div>
+        </div>
+
+        <div>
+          <div class="font-black mb-3 text-white" data-i18n="footer_comp">الموقع والإدارة</div>
+          <div class="space-y-2 text-xs text-slate-400">
+            <a href="#" onclick="showView('auth');authTab('login');return false;" class="block hover:text-white">تسجيل الدخول</a>
+            <a href="#" onclick="showView('auth');authTab('reg');return false;" class="block hover:text-white">إنشاء حساب مجاني (5 مقاطع)</a>
+            <a href="#" onclick="quickAdmin(event)" class="block text-yellow-300 font-bold hover:underline">🔐 دخول لوحة الإدارة (Admin)</a>
+          </div>
+        </div>
+
+        <div>
+          <div class="font-black mb-3 text-white">طرق الدفع المدعومة</div>
+          <div class="flex flex-wrap gap-2 text-[10px] font-bold">
+            <span class="bg-white text-[#1A237E] px-2.5 py-1 rounded italic font-black">VISA</span>
+            <span class="bg-white text-slate-800 px-2.5 py-1 rounded">Mastercard</span>
+            <span class="bg-[#F0B90B] text-black px-2.5 py-1 rounded">Binance Pay</span>
+          </div>
+          <div class="text-xs text-slate-400 mt-3">
+            دعم فني سريع: support@clipgenius.ai
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center text-xs text-slate-500 py-4 border-t border-white/5" data-i18n="footer_rights">
+        © 2026 ClipGenius AI — جميع الحقوق محفوظة • تجربة 5 فيديوهات مجانية ثم 6$ شهرياً
+      </div>
+    </footer>
+  </div>
+
+  <!-- ================= AUTH VIEW ================= -->
+  <div id="view-auth" class="hidden relative z-10 min-h-screen pt-28 pb-16 px-4">
+    <div class="max-w-4xl mx-auto grid lg:grid-cols-2 gap-6 items-stretch">
+      <div class="rounded-3xl p-8 relative overflow-hidden hidden lg:flex flex-col justify-between" style="background:linear-gradient(150deg,#5B21B6,#1E1B4B 55%,#0E7490)">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 px-3 py-1 rounded-full text-xs font-bold mb-4">
+            🎁 5 فيديوهات مجاناً فور إنشاء الحساب
+          </div>
+          <h2 class="font-black text-3xl leading-snug">
+            اصنع شورتس احترافية<br>
+            <span class="text-cyan-300">بهوك يجذب الملايين</span>
+          </h2>
+          <ul class="mt-6 space-y-3 text-sm text-white/90">
+            <li class="flex items-center gap-2">✅ 5 فيديوهات تجريبية بالكامل مجاناً</li>
+            <li class="flex items-center gap-2">✅ تحكم يدوي بمدة الشورت (15s، 30s، 60s)</li>
+            <li class="flex items-center gap-2">✅ كل 10 أصدقاء يشتركون = شهر PRO مجاني</li>
+            <li class="flex items-center gap-2">✅ بعد التجربة: فقط 6$/شهر (Visa / MC / Binance)</li>
+          </ul>
+        </div>
+        <div class="p-4 bg-black/40 rounded-2xl border border-white/10 text-xs text-slate-300">
+          💡 يمكنك الدخول بضغطة زر واحدة للتجربة الفورية كأدمن أو مستخدم عادي من الأزرار السريعة.
+        </div>
+      </div>
+
+      <div class="glass rounded-3xl p-6 md:p-8">
+        <div class="flex bg-black/40 rounded-xl p-1 mb-6">
+          <button id="tabLogin" onclick="authTab('login')" class="flex-1 py-2.5 rounded-lg font-black text-sm tab-btn active">تسجيل الدخول</button>
+          <button id="tabReg" onclick="authTab('reg')" class="flex-1 py-2.5 rounded-lg font-black text-sm tab-btn text-slate-400">حساب جديد (5 مجاناً) 🎁</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div id="formLogin" class="space-y-4">
+          <div>
+            <label class="text-xs font-bold text-slate-300">البريد الإلكتروني</label>
+            <input id="li_email" type="email" placeholder="you@domain.com" class="mt-1 w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-sm" style="direction:ltr;text-align:left">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-300">كلمة المرور</label>
+            <input id="li_pass" type="password" placeholder="••••••••" class="mt-1 w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-sm" style="direction:ltr;text-align:left">
+          </div>
+          <button onclick="doLogin()" class="neon-btn w-full py-3.5 rounded-xl font-black text-white text-sm">
+            دخول للمنصة 🚀
+          </button>
+
+          <!-- Quick Fill Demo Buttons -->
+          <div class="pt-3 border-t border-white/10">
+            <div class="text-[11px] font-bold text-slate-400 mb-2 text-center">أزرار الدخول السريع للاختبار التجريبي:</div>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="fillDemo('admin')" class="glass-soft rounded-xl py-2 px-3 text-xs font-bold hover:bg-white/10 text-yellow-300 border border-yellow-400/30">
+                🛡️ دخول كأدمن (Admin)
+              </button>
+              <button onclick="fillDemo('user')" class="glass-soft rounded-xl py-2 px-3 text-xs font-bold hover:bg-white/10 text-cyan-300 border border-cyan-400/30">
+                👤 دخول كمستخدم (5 مجانية)
+              </button>
+            </div>
+            <div class="text-[10px] text-slate-500 mt-2 text-center">
+              أدمن: admin@clipai.com (admin123) • مستخدم: user@demo.com (demo123)
+            </div>
+          </div>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div id="formReg" class="space-y-4 hidden">
+          <div>
+            <label class="text-xs font-bold text-slate-300">الاسم الكامل</label>
+            <input id="rg_name" placeholder="محمد أحمد" class="mt-1 w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-sm">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-300">البريد الإلكتروني</label>
+            <input id="rg_email" type="email" placeholder="you@domain.com" class="mt-1 w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-sm" style="direction:ltr;text-align:left">
+          </div>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-bold text-slate-300">كلمة المرور</label>
+              <input id="rg_pass" type="password" placeholder="6 أحرف على الأقل" class="mt-1 w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-sm" style="direction:ltr;text-align:left">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-yellow-300">🎁 كود الدعوة (اختياري)</label>
+              <input id="rg_ref" placeholder="DEMO-7X2K" class="mt-1 w-full bg-black/40 border border-yellow-400/30 rounded-xl px-4 py-3 text-sm font-mono text-yellow-200" style="direction:ltr;text-align:left">
+            </div>
+          </div>
+
+          <label class="flex items-start gap-2 text-xs text-slate-400 cursor-pointer">
+            <input type="checkbox" id="rg_terms" checked class="mt-1 accent-violet-600">
+            <span>أوافق على الشروط، وسأحصل على <b class="text-emerald-300">5 فيديوهات مجانية بالكامل</b> بدون بطاقة.</span>
+          </label>
+
+          <button onclick="doRegister()" class="neon-btn w-full py-3.5 rounded-xl font-black text-white text-sm">
+            إنشاء حساب وتفعيل 5 فيديوهات مجاناً 🎉
+          </button>
+        </div>
+
+        <button onclick="showView('landing')" class="w-full mt-5 text-xs text-slate-400 hover:text-white transition">
+          ← العودة للصفحة الرئيسية
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= USER DASHBOARD ================= -->
+  <div id="view-dash" class="hidden relative z-10 pt-24 pb-16 px-3 md:px-6 max-w-7xl mx-auto">
+    <!-- Top user bar -->
+    <div class="glass rounded-3xl p-4 md:p-5 flex flex-wrap items-center gap-3 mb-5 shadow-2xl">
+      <div class="flex items-center gap-3">
+        <div id="dashAvatar" class="w-12 h-12 rounded-2xl grid place-items-center font-black text-lg text-white shadow-lg" style="background:linear-gradient(135deg,#7C3AED,#06B6D4)">
+          U
+        </div>
+        <div>
+          <div class="font-black flex items-center gap-2">
+            <span id="dashName">مستخدم</span>
+            <span id="dashProBadge"></span>
+          </div>
+          <div id="dashEmail" class="text-xs text-slate-400 font-mono">email@domain.com</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 ms-auto flex-wrap">
+        <div class="glass-soft rounded-xl px-3.5 py-2 flex items-center gap-2 text-xs font-black">
+          <i class="fa-solid fa-ticket text-emerald-300 text-sm"></i>
+          <span>الرصيد:</span>
+          <span id="dashCredits" class="text-emerald-300 text-sm font-black">5</span>
+          <span class="text-slate-400 font-normal">فيديوهات مجانية</span>
+        </div>
+
+        <button onclick="openPay()" class="gold-btn px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5">
+          <i class="fa-solid fa-crown"></i> <span>ترقية PRO (6$)</span>
+        </button>
+
+        <button onclick="showView('landing')" class="glass-soft px-3 py-2 rounded-xl text-xs font-bold hover:bg-white/10" title="الرئيسية">
+          <i class="fa-solid fa-house"></i>
+        </button>
+        <button onclick="logout()" class="glass-soft px-3 py-2 rounded-xl text-xs font-bold text-red-300 hover:bg-white/10" title="خروج">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <div class="grid lg:grid-cols-[240px_1fr] gap-5">
+      <!-- SIDEBAR TABS -->
+      <div class="glass rounded-3xl p-3 h-fit lg:sticky lg:top-24 space-y-1.5" id="dashSide">
+        <button data-tab="create" onclick="dashTab('create',this)" class="sidebar-link active w-full text-start px-4 py-3 rounded-xl text-xs md:text-sm font-bold border border-transparent hover:bg-white/5 flex items-center gap-2.5">
+          <i class="fa-solid fa-wand-magic-sparkles text-violet-400"></i> قص شورتس بهوك AI
+        </button>
+        <button data-tab="clips" onclick="dashTab('clips',this)" class="sidebar-link w-full text-start px-4 py-3 rounded-xl text-xs md:text-sm font-bold border border-transparent hover:bg-white/5 flex items-center justify-between">
+          <span class="flex items-center gap-2.5"><i class="fa-solid fa-film text-cyan-300"></i> المقاطع الناتجة</span>
+          <span id="clipsCount" class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-mono">0</span>
+        </button>
+        <button data-tab="sub" onclick="dashTab('sub',this)" class="sidebar-link w-full text-start px-4 py-3 rounded-xl text-xs md:text-sm font-bold border border-transparent hover:bg-white/5 flex items-center gap-2.5">
+          <i class="fa-solid fa-crown text-yellow-300"></i> الاشتراك والترقية (6$)
+        </button>
+        <button data-tab="ref" onclick="dashTab('ref',this)" class="sidebar-link w-full text-start px-4 py-3 rounded-xl text-xs md:text-sm font-bold border border-transparent hover:bg-white/5 flex items-center justify-between">
+          <span class="flex items-center gap-2.5"><i class="fa-solid fa-gift text-pink-400"></i> المكافآت (10=1 شهر)</span>
+          <span class="text-[9px] bg-yellow-400 text-black px-1.5 py-0.5 rounded font-black">هدية</span>
+        </button>
+        <button data-tab="tx" onclick="dashTab('tx',this)" class="sidebar-link w-full text-start px-4 py-3 rounded-xl text-xs md:text-sm font-bold border border-transparent hover:bg-white/5 flex items-center gap-2.5">
+          <i class="fa-solid fa-receipt text-emerald-300"></i> فواتير الدفع
+        </button>
+        <button data-tab="set" onclick="dashTab('set',this)" class="sidebar-link w-full text-start px-4 py-3 rounded-xl text-xs md:text-sm font-bold border border-transparent hover:bg-white/5 flex items-center gap-2.5">
+          <i class="fa-solid fa-gear text-slate-300"></i> إعدادات الحساب
+        </button>
+        <button id="adminGoBtn" onclick="showView('admin')" class="hidden w-full text-start px-4 py-3 rounded-xl text-xs md:text-sm font-black border border-yellow-400/40 bg-yellow-400/10 text-yellow-300 flex items-center gap-2.5">
+          <i class="fa-solid fa-shield-halved"></i> لوحة تحكم الإدارة 🛡️
+        </button>
+      </div>
+
+      <!-- MAIN TAB CONTENT -->
+      <div class="min-h-[500px]">
+        <!-- TAB: CREATE SHORTS -->
+        <div id="dtab-create" class="space-y-5">
+          <div class="glass rounded-3xl p-6 md:p-8">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <h3 class="font-black text-xl flex items-center gap-2">
+                <span>🎬</span> قص شورتس ذكية مع تحكم يدوي بالمدة والهوك
+              </h3>
+              <span class="text-xs bg-cyan-400/15 text-cyan-300 px-3 py-1 rounded-full border border-cyan-400/30 font-bold">
+                محرك الذكاء الاصطناعي مفعّل
+              </span>
+            </div>
+
+            <!-- YouTube input -->
+            <div class="mt-5 flex flex-col md:flex-row gap-2">
+              <div class="flex items-center flex-1 gap-2 bg-black/40 border border-white/15 rounded-xl px-4">
+                <i class="fa-brands fa-youtube text-red-500 text-xl"></i>
+                <input id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." class="bg-transparent flex-1 py-3 text-sm placeholder:text-slate-500 border-0" style="direction:ltr;text-align:left">
+              </div>
+              <button onclick="fetchMeta()" class="glass-soft px-5 py-3 rounded-xl text-xs md:text-sm font-bold hover:bg-white/10 whitespace-nowrap">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> فحص الفيديو
+              </button>
+            </div>
+
+            <!-- YouTube Video preview info box -->
+            <div id="metaBox" class="hidden mt-4 bg-black/40 border border-white/10 rounded-2xl p-4 flex gap-4 items-center">
+              <img id="metaThumb" src="" class="w-32 rounded-xl aspect-video object-cover">
+              <div>
+                <div id="metaTitle" class="font-black text-sm text-white">عنوان الفيديو</div>
+                <div id="metaInfo" class="text-xs text-slate-400 mt-1">معلومات القناة</div>
+              </div>
+            </div>
+
+            <!-- MANUAL DURATION SETTING & AI HOOK CONTROLS -->
+            <div class="mt-6 p-5 rounded-2xl bg-black/30 border border-white/10 space-y-5">
+              <!-- Feature: Manual Duration Selector -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-xs md:text-sm font-black text-white flex items-center gap-2">
+                    <i class="fa-solid fa-clock text-cyan-300"></i>
+                    <span>تحديد مدة الشورت يدويّاً (Manual Duration):</span>
+                    <span id="durValLabel" class="text-cyan-300 font-mono text-base font-black">30 ثانية</span>
+                  </label>
+                  <span class="text-[11px] text-slate-400">اختر من الخيارات السريعة أو استخدم الشريط:</span>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="grid grid-cols-4 gap-2 mb-3">
+                  <button type="button" onclick="setPresetDur(15)" class="dur-preset py-2 rounded-xl text-xs font-bold glass-soft hover:border-cyan-400">15 ثانية (سريع 🔥)</button>
+                  <button type="button" onclick="setPresetDur(30)" class="dur-preset py-2 rounded-xl text-xs font-bold glass-soft border-cyan-400 text-cyan-300 bg-cyan-400/10">30 ثانية (مثالي 🎯)</button>
+                  <button type="button" onclick="setPresetDur(45)" class="dur-preset py-2 rounded-xl text-xs font-bold glass-soft hover:border-cyan-400">45 ثانية (شرح 💡)</button>
+                  <button type="button" onclick="setPresetDur(60)" class="dur-preset py-2 rounded-xl text-xs font-bold glass-soft hover:border-cyan-400">60 ثانية (قصة 📖)</button>
+                </div>
+
+                <div class="flex items-center gap-4">
+                  <span class="text-xs text-slate-400 font-mono">10s</span>
+                  <input id="customDur" type="range" min="10" max="90" value="30" step="5" class="w-full cursor-pointer" oninput="onDurSliderChange(this.value)">
+                  <span class="text-xs text-slate-400 font-mono">90s</span>
+                </div>
+              </div>
+
+              <!-- Feature: AI Hook Style Selector -->
+              <div class="pt-4 border-t border-white/10">
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-xs md:text-sm font-black text-white flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-pink-400"></i>
+                    <span>نوع الهوك بالذكاء الاصطناعي (AI Hook Type to attract views):</span>
+                  </label>
+                  <span class="text-[11px] text-pink-400 font-bold">لرفع نسبة المشاهدة أول 3 ثوانٍ</span>
+                </div>
+                <div class="grid sm:grid-cols-3 gap-2" id="hookTypesRow">
+                  <div onclick="pickHookType(this, 'shock')" class="hook-box active cursor-pointer p-3 rounded-xl border border-pink-500/50 bg-pink-500/15 text-xs font-bold">
+                    <div class="text-pink-300 font-black">😱 صدمة وإثارة (Shock Hook)</div>
+                    <div class="text-[10px] text-slate-400 mt-1">« لن تصدق ما كشفه في هذه اللحظة! »</div>
+                  </div>
+                  <div onclick="pickHookType(this, 'curiosity')" class="hook-box cursor-pointer p-3 rounded-xl border border-white/10 bg-black/20 text-xs font-bold hover:border-pink-400">
+                    <div class="text-yellow-300 font-black">🤫 سر وفضول (Curiosity Gap)</div>
+                    <div class="text-[10px] text-slate-400 mt-1">« السر الذي يخفيه 99% من المحترفين »</div>
+                  </div>
+                  <div onclick="pickHookType(this, 'mistake')" class="hook-box cursor-pointer p-3 rounded-xl border border-white/10 bg-black/20 text-xs font-bold hover:border-pink-400">
+                    <div class="text-red-400 font-black">⛔ خطأ قاتل (Negative Hook)</div>
+                    <div class="text-[10px] text-slate-400 mt-1">« توقف عن فعل هذا فوراً قبل فوات الأوان! »</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Additional Settings (Clips count, caption language, enhancements) -->
+              <div class="pt-4 border-t border-white/10 grid sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="text-xs font-bold text-slate-300 mb-1.5 block">عدد المقاطع المطلوبة:</label>
+                  <select id="clipNum" class="w-full bg-[#141B3D] border border-white/15 rounded-xl px-3 py-2 text-xs font-bold">
+                    <option value="3">3 شورتس</option>
+                    <option value="4" selected>4 شورتس (مستحسن)</option>
+                    <option value="6">6 شورتس</option>
+                    <option value="8">8 شورتس</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-slate-300 mb-1.5 block">لغة الترجمة والكاريوكي:</label>
+                  <select id="capLang" class="w-full bg-[#141B3D] border border-white/15 rounded-xl px-3 py-2 text-xs font-bold">
+                    <option value="ar" selected>العربية (اللهجات + الفصحى)</option>
+                    <option value="en">English (US / UK)</option>
+                    <option value="fr">Français</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-slate-300 mb-1.5 block">ستايل الترجمة:</label>
+                  <select id="tplStyleSelect" class="w-full bg-[#141B3D] border border-white/15 rounded-xl px-3 py-2 text-xs font-bold" onchange="tplStyle=this.value">
+                    <option value="beast">MrBeast 🔥 (أصفر + أسود)</option>
+                    <option value="neon">NEON ⚡ (أزرق نيون مشع)</option>
+                    <option value="minimal">Minimal 🤍 (كلاسيكي نظيف)</option>
+                    <option value="cinema">Cinema 🎥 (أرجواني سينمائي)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Start button -->
+            <button onclick="startProcess()" class="neon-btn shine w-full mt-6 py-4 rounded-2xl font-black text-white text-base flex items-center justify-center gap-2">
+              <i class="fa-solid fa-bolt"></i>
+              <span>توليد الشورتس بالذكاء الاصطناعي — </span>
+              <span id="costLbl" class="text-yellow-300">يستهلك 1 من الفيديوهات المجانية</span>
+            </button>
+          </div>
+
+          <!-- PROGRESS BAR BOX -->
+          <div id="processBox" class="hidden glass rounded-3xl p-6 md:p-8">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+              <h3 class="font-black text-base md:text-lg flex items-center gap-2">
+                <span>⚙️</span> جارٍ تطبيق الهوك وقص الفيديو بالمدة المحددة…
+                <span class="text-cyan-300 font-mono" id="procPct">0%</span>
+              </h3>
+              <div class="text-xs font-bold text-slate-400 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span> Whisper AI + Vision Hook Engine
+              </div>
+            </div>
+
+            <div class="h-3 bg-black/50 rounded-full mt-4 overflow-hidden">
+              <div id="procBar" class="h-full rounded-full transition-all duration-300" style="width:0%; background:linear-gradient(90deg,#8B5CF6,#22D3EE,#FACC15,#EC4899)"></div>
+            </div>
+
+            <div class="grid sm:grid-cols-4 gap-2 mt-5 text-center text-xs font-bold" id="procSteps">
+              <div class="bg-white/5 rounded-xl p-3 border border-white/10" data-s="0">
+                📥 1. تنزيل وتحليل<br><span class="st text-slate-500 text-[10px]">بانتظار…</span>
+              </div>
+              <div class="bg-white/5 rounded-xl p-3 border border-white/10" data-s="1">
+                🎙️ 2. تفريغ و كشف الهوكات<br><span class="st text-slate-500 text-[10px]">بانتظار…</span>
+              </div>
+              <div class="bg-white/5 rounded-xl p-3 border border-white/10" data-s="2">
+                ⏱️ 3. تطبيق المدة المحددة<br><span class="st text-slate-500 text-[10px]">بانتظار…</span>
+              </div>
+              <div class="bg-white/5 rounded-xl p-3 border border-white/10" data-s="3">
+                ✂️ 4. تأطير 9:16 وترجمة<br><span class="st text-slate-500 text-[10px]">بانتظار…</span>
+              </div>
+            </div>
+
+            <div id="procLog" class="log-box mt-5 bg-black/60 border border-white/10 rounded-2xl p-4 h-40 overflow-y-auto text-emerald-300 font-mono" dir="ltr"></div>
+          </div>
+
+          <!-- RESULTS BOX -->
+          <div id="resultBox" class="hidden space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+              <h3 class="font-black text-xl flex items-center gap-2">
+                <span>🎉</span> <span id="resCount" class="grad-text">الشورتس جاهزة!</span>
+              </h3>
+              <div class="flex gap-2">
+                <button onclick="toast('تم تجهيز أرشيف ZIP بجودة 4K 📦','ok')" class="gold-btn px-4 py-2 rounded-xl text-xs font-black">
+                  <i class="fa-solid fa-download me-1"></i> تحميل الكل (ZIP)
+                </button>
+              </div>
+            </div>
+
+            <div id="resGrid" class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+          </div>
+        </div>
+
+        <!-- TAB: CLIPS LIBRARY -->
+        <div id="dtab-clips" class="hidden">
+          <div class="glass rounded-3xl p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-black text-lg">📁 مكتبة المقاطع والشورتس المحفوظة</h3>
+              <span class="text-xs text-slate-400">تظل محفوظة في حسابك دائماً</span>
+            </div>
+            <div id="clipsGrid" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+          </div>
+        </div>
+
+        <!-- TAB: SUBSCRIPTION & UPGRADE -->
+        <div id="dtab-sub" class="hidden space-y-5">
+          <div class="rounded-3xl p-8 text-center relative overflow-hidden shadow-2xl" style="background:linear-gradient(135deg,#F59E0B,#EF4444 50%,#8B5CF6)" id="subCard">
+            <h3 class="font-black text-2xl md:text-3xl text-white" id="subTitle">الحالة: تجريبي مجاني</h3>
+            <p class="text-white/90 text-sm mt-2 max-w-lg mx-auto" id="subDesc">
+              متبقي لديك 5 فيديوهات مجانية لتجربة كافة الهوكات والمدد.
+            </p>
+            <div class="flex justify-center gap-3 mt-6 flex-wrap">
+              <button onclick="openPay()" class="bg-white text-black font-black px-8 py-3.5 rounded-2xl text-sm hover:scale-105 transition shadow-2xl flex items-center gap-2">
+                <i class="fa-solid fa-crown text-amber-500"></i> <span>اشترك في باقة PRO — 6$ شهرياً</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="glass rounded-3xl p-6 md:p-8">
+            <h4 class="font-black text-base mb-4 text-white">✨ ما الذي يمنحه لك اشتراك الـ 6$ شهرياً؟</h4>
+            <div class="grid sm:grid-cols-2 gap-4 text-sm text-slate-300">
+              <div class="p-4 rounded-2xl bg-black/30 border border-white/10 flex items-start gap-3">
+                <span class="text-xl">♾️</span>
+                <div>
+                  <b class="text-white">فيديوهات غير محدودة</b>
+                  <p class="text-xs text-slate-400 mt-0.5">حوّل أي عدد تريده من فيديوهات يوتيوب بدون قيود أسبوعية أو شهرية.</p>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-black/30 border border-white/10 flex items-start gap-3">
+                <span class="text-xl">⏱️</span>
+                <div>
+                  <b class="text-white">تحكم يدوي كامل بالمدة</b>
+                  <p class="text-xs text-slate-400 mt-0.5">حدد مدة الشورت بالثانية المناسبة لخوارزميات تيك توك وريلز (15، 30، 60، 90 ثانية).</p>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-black/30 border border-white/10 flex items-start gap-3">
+                <span class="text-xl">🎯</span>
+                <div>
+                  <b class="text-white">جميع أنواع الهوكات الذكية</b>
+                  <p class="text-xs text-slate-400 mt-0.5">هوكات الصدمة، كسر التوقعات، الأسئلة الغامضة، ومولد العناوين الفيروسي.</p>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-black/30 border border-white/10 flex items-start gap-3">
+                <span class="text-xl">🎁</span>
+                <div>
+                  <b class="text-white">نظام الشهور المجانية</b>
+                  <p class="text-xs text-slate-400 mt-0.5">ادعُ 10 أصدقاء للاشتراك واحصل على شهر إضافي مجاني يضاف لاشتراكك تلقائياً.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: REFERRAL & REWARDS (10 USERS = 1 MONTH FREE) -->
+        <div id="dtab-ref" class="hidden space-y-5">
+          <div class="rounded-3xl p-7 relative overflow-hidden" style="background:linear-gradient(135deg,#3B0764,#1E1B4B)">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <h3 class="font-black text-xl flex items-center gap-2">
+                <span>🎁</span> نظام مكافآت الإحالة: 10 مشتركين = شهر PRO مجاني
+              </h3>
+              <span class="text-xs font-black bg-yellow-400 text-black px-3 py-1 rounded-full">بدون حد أقصى</span>
+            </div>
+
+            <p class="text-xs md:text-sm text-slate-300 mt-2 leading-relaxed">
+              شارك رابطك الفريد مع أصدقائك أو متابعيك. عندما يشترك أي شخص بـ 6$ عبر رابطك، يتم تسجيله فوراً. عند إتمام كل 10 مشتركين ستحصل تلقائياً على 30 يوماً إضافياً مجاناً في باقة PRO.
+            </p>
+
+            <!-- Referral Link Box -->
+            <div class="mt-4 bg-black/50 border border-yellow-300/30 rounded-2xl p-3 flex items-center gap-2">
+              <code id="myRefLink" class="flex-1 truncate text-yellow-200 font-mono text-xs md:text-sm" dir="ltr">https://clipgenius.ai/r/USER...</code>
+              <button onclick="copyRef()" class="gold-btn px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1">
+                <i class="fa-solid fa-copy"></i> <span>نسخ</span>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between flex-wrap gap-3 mt-4 text-xs">
+              <div>كود الدعوة الخاص بك: <b id="myRefCode" class="font-mono text-cyan-300 text-sm">CODE</b></div>
+              <button onclick="demoInvite()" class="glass-soft text-[11px] px-3 py-1.5 rounded-lg hover:bg-white/10 text-yellow-300 font-bold border border-yellow-400/30">
+                + محاكاة اشتراك صديق (تجربة الإحالة)
+              </button>
+            </div>
+
+            <!-- Progress to next free month -->
+            <div class="mt-6 p-4 rounded-2xl bg-black/40 border border-white/10">
+              <div class="flex justify-between items-center text-xs md:text-sm font-black mb-2">
+                <span>التقدم نحو الشهر المجاني التالي:</span>
+                <span id="refProgLbl" class="text-yellow-300 font-mono font-black">0 / 10 مشتركين</span>
+              </div>
+              <div class="h-4 bg-black/70 rounded-full overflow-hidden">
+                <div id="refProgBar" class="h-full rounded-full transition-all duration-500" style="width:0%; background:linear-gradient(90deg,#FACC15,#EC4899,#22D3EE)"></div>
+              </div>
+              <div class="text-[11px] text-slate-400 mt-2" id="refBonusCount">
+                إجمالي الشهور المجانية التي كسبتها حتى الآن: 0 شهر
+              </div>
+            </div>
+
+            <!-- Share buttons -->
+            <div class="grid grid-cols-3 gap-2 mt-5 text-center text-xs font-bold">
+              <button onclick="shareRef('whatsapp')" class="bg-[#25D366]/20 border border-[#25D366]/40 text-green-300 rounded-xl py-2.5">
+                <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
+              </button>
+              <button onclick="shareRef('telegram')" class="bg-sky-500/20 border border-sky-500/40 text-sky-300 rounded-xl py-2.5">
+                <i class="fa-brands fa-telegram text-sm"></i> Telegram
+              </button>
+              <button onclick="shareRef('x')" class="bg-white/10 border border-white/20 rounded-xl py-2.5">
+                <i class="fa-brands fa-x-twitter text-sm"></i> X (Twitter)
+              </button>
+            </div>
+          </div>
+
+          <!-- Invited Users List -->
+          <div class="glass rounded-3xl p-6">
+            <h4 class="font-black text-sm mb-3">👥 قائمة المسجلين برابطك (<span id="invCount">0</span>)</h4>
+            <div id="invList" class="space-y-2 text-xs"></div>
+          </div>
+        </div>
+
+        <!-- TAB: TRANSACTIONS -->
+        <div id="dtab-tx" class="hidden">
+          <div class="glass rounded-3xl p-6">
+            <h3 class="font-black text-lg mb-4">🧾 سجل المدفوعات والاشتراكات</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs md:text-sm">
+                <thead>
+                  <tr class="border-b border-white/10 text-slate-400">
+                    <th class="text-start py-2">البيان</th>
+                    <th class="py-2">المبلغ</th>
+                    <th class="py-2">طريقة الدفع</th>
+                    <th class="py-2">الحالة</th>
+                    <th class="py-2">التاريخ</th>
+                  </tr>
+                </thead>
+                <tbody id="txBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: SETTINGS -->
+        <div id="dtab-set" class="hidden">
+          <div class="glass rounded-3xl p-6 md:p-8 space-y-4 max-w-xl">
+            <h3 class="font-black text-lg">⚙️ إعدادات الحساب</h3>
+            <div>
+              <label class="text-xs font-bold text-slate-400">الاسم الكامل</label>
+              <input id="setName" class="mt-1 w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-slate-400">لغة واجهة المنصة</label>
+              <div class="flex gap-2 mt-2">
+                <button type="button" onclick="setLang('ar')" class="glass-soft px-4 py-2 rounded-xl text-xs font-bold">🇸🇦 العربية</button>
+                <button type="button" onclick="setLang('en')" class="glass-soft px-4 py-2 rounded-xl text-xs font-bold">🇬🇧 English</button>
+                <button type="button" onclick="setLang('fr')" class="glass-soft px-4 py-2 rounded-xl text-xs font-bold">🇫🇷 Français</button>
+              </div>
+            </div>
+            <div>
+              <label class="text-xs font-bold text-slate-400">تغيير كلمة المرور</label>
+              <input id="setPass" type="password" placeholder="اتركه فارغاً إن لم ترغب في التغيير" class="mt-1 w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm" style="direction:ltr">
+            </div>
+            <button onclick="saveSettings()" class="neon-btn px-8 py-3 rounded-xl font-black text-xs md:text-sm text-white">
+              💾 حفظ التعديلات
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ADMIN DASHBOARD ================= -->
+  <div id="view-admin" class="hidden relative z-10 pt-24 pb-16 px-3 md:px-6 max-w-7xl mx-auto">
+    <!-- Admin Header -->
+    <div class="rounded-3xl p-6 md:p-8 mb-5 relative overflow-hidden shadow-2xl" style="background:linear-gradient(135deg,#111C4A,#3B0764 60%,#7C2D12)">
+      <div class="flex flex-wrap items-center gap-4 relative">
+        <div class="w-14 h-14 rounded-2xl grid place-items-center text-3xl bg-yellow-400 text-black shadow-lg">
+          🛡️
+        </div>
+        <div>
+          <h2 class="font-black text-2xl flex items-center gap-2">
+            <span>لوحة تحكم المدير العام (Master Admin)</span>
+            <span class="text-xs bg-red-500 text-white font-black px-2.5 py-0.5 rounded-full">ADMIN</span>
+          </h2>
+          <div class="text-xs text-slate-300 mt-1">
+            إدارة كاملة: المستخدمين، اشتراكات الـ 6$، الإحالات (10=1 شهر)، التحليلات، وإعدادات المنصة.
+          </div>
+        </div>
+
+        <div class="ms-auto flex gap-2 flex-wrap">
+          <button onclick="showView('dash')" class="glass-soft px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/10">
+            👤 وضع تجربة المستخدم
+          </button>
+          <button onclick="exportCSV()" class="gold-btn px-4 py-2 rounded-xl text-xs font-black">
+            <i class="fa-solid fa-file-csv me-1"></i> تصدير البيانات (CSV)
+          </button>
+          <button onclick="logout()" class="bg-red-500/20 border border-red-500/40 text-red-300 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-500/30">
+            خروج
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick KPI Stats -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+        <div class="bg-black/50 border border-white/10 rounded-2xl p-4">
+          <div class="text-xs text-slate-400 font-bold">👥 إجمالي المستخدمين المسجلين</div>
+          <div class="text-3xl font-black mt-1" id="aUsers">0</div>
+          <div class="text-[11px] text-emerald-300 font-bold mt-1">تجربة 5 فيديوهات نشطة</div>
+        </div>
+
+        <div class="bg-black/50 border border-white/10 rounded-2xl p-4">
+          <div class="text-xs text-slate-400 font-bold">💰 الدخل الشهري المتكرر (MRR)</div>
+          <div class="text-3xl font-black text-emerald-300 mt-1" id="aMrr">$0</div>
+          <div class="text-[11px] text-slate-400 mt-1" id="aSubs">0 مشترك في خطة الـ 6$</div>
+        </div>
+
+        <div class="bg-black/50 border border-white/10 rounded-2xl p-4">
+          <div class="text-xs text-slate-400 font-bold">🎬 فيديوهات وشورتس معالجة</div>
+          <div class="text-3xl font-black text-cyan-300 mt-1" id="aVideos">0</div>
+          <div class="text-[11px] text-slate-400 mt-1">بهوكات الذكاء الاصطناعي</div>
+        </div>
+
+        <div class="bg-black/50 border border-white/10 rounded-2xl p-4">
+          <div class="text-xs text-slate-400 font-bold">🎁 شهور مجانية مُنحت (نظام الـ 10)</div>
+          <div class="text-3xl font-black text-yellow-300 mt-1" id="aBonus">0</div>
+          <div class="text-[11px] text-slate-400 mt-1">مكافآت الإحالة التلقائية</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid lg:grid-cols-3 gap-5 mb-5">
+      <div class="glass rounded-3xl p-5 lg:col-span-2">
+        <div class="font-black text-sm mb-3 flex items-center justify-between">
+          <span>📈 منحنى نمو الإيرادات والاشتراكات (آخر 12 يوماً)</span>
+          <span class="text-xs text-emerald-400 font-mono font-bold">+24% أسبوعياً</span>
+        </div>
+        <div class="h-56">
+          <canvas id="chRev"></canvas>
+        </div>
+      </div>
+
+      <div class="glass rounded-3xl p-5">
+        <div class="font-black text-sm mb-3">🍩 توزيع خطط المستخدمين</div>
+        <div class="h-56">
+          <canvas id="chPlans"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Management Table -->
+    <div class="glass rounded-3xl p-5 md:p-6 mb-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h3 class="font-black text-base flex items-center gap-2">
+          <span>👥</span> جدول المستخدمين والاشتراكات
+        </h3>
+        <div class="flex gap-2 flex-1 max-w-md">
+          <input id="uSearch" oninput="renderUsers()" placeholder="🔍 بحث بالاسم أو الإيميل أو الكود…" class="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs flex-1">
+          <select id="uFilter" onchange="renderUsers()" class="bg-[#141B3D] border border-white/10 rounded-xl px-3 py-2 text-xs font-bold">
+            <option value="all">الكل</option>
+            <option value="pro">PRO فقط (6$)</option>
+            <option value="free">تجريبي مجاني (5 فيديوهات)</option>
+            <option value="admin">مدراء المنصة</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs md:text-sm">
+          <thead>
+            <tr class="border-b border-white/10 text-slate-400">
+              <th class="text-start py-3 px-3">المستخدم</th>
+              <th class="py-3 px-3">الخطة</th>
+              <th class="py-3 px-3">المجانية المتبقية</th>
+              <th class="py-3 px-3">المشتركون عبره (الإحالة)</th>
+              <th class="py-3 px-3">الشهور المكتسبة</th>
+              <th class="py-3 px-3">إجمالي ما دفعه</th>
+              <th class="py-3 px-3">إجراءات المدير</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Admin Settings & Recent TX -->
+    <div class="grid lg:grid-cols-2 gap-5">
+      <div class="glass rounded-3xl p-5">
+        <h3 class="font-black text-sm mb-3 flex items-center gap-2">
+          <span>💳</span> آخر المعاملات المالية (Visa / MC / Binance)
+        </h3>
+        <div id="adminTx" class="space-y-2 text-xs max-h-72 overflow-y-auto"></div>
+      </div>
+
+      <div class="glass rounded-3xl p-5">
+        <h3 class="font-black text-sm mb-3 flex items-center gap-2">
+          <span>⚙️</span> إعدادات المنصة والأسعار والمكافآت
+        </h3>
+        <div class="space-y-3 text-xs">
+          <label class="flex items-center justify-between bg-black/30 rounded-xl px-4 py-3">
+            <span>سعر اشتراك PRO الشهري ($):</span>
+            <input id="cfgPrice" value="6" type="number" class="w-20 bg-[#141B3D] border border-white/10 rounded-lg px-2 py-1.5 text-center font-black text-yellow-300" dir="ltr">
+          </label>
+          <label class="flex items-center justify-between bg-black/30 rounded-xl px-4 py-3">
+            <span>عدد الفيديوهات للتجربة المجانية:</span>
+            <input id="cfgFree" value="5" type="number" class="w-20 bg-[#141B3D] border border-white/10 rounded-lg px-2 py-1.5 text-center font-black text-cyan-300" dir="ltr">
+          </label>
+          <label class="flex items-center justify-between bg-black/30 rounded-xl px-4 py-3">
+            <span>عدد المشتركين المطلوب لمنح شهر مجاني:</span>
+            <input id="cfgRefReq" value="10" type="number" class="w-20 bg-[#141B3D] border border-white/10 rounded-lg px-2 py-1.5 text-center font-black text-pink-400" dir="ltr">
+          </label>
+          <label class="flex items-center justify-between bg-black/30 rounded-xl px-4 py-3">
+            <span>عنوان محفظة Binance Pay المخصصة:</span>
+            <input id="cfgBin" value="BNB-PAY-CLIP-GENIUS-6USD" class="w-48 bg-[#141B3D] border border-white/10 rounded-lg px-2 py-1.5 text-center font-mono text-[10px]" dir="ltr">
+          </label>
+
+          <button onclick="toast('تم تحديث إعدادات المنصة بنجاح ✅','ok')" class="neon-btn w-full py-3 rounded-xl font-black text-white text-xs">
+            💾 حفظ إعدادات النظام
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PAYMENT MODAL (Visa / Mastercard / Binance) ================= -->
+  <div id="payModal" class="hidden fixed inset-0 z-[80] grid place-items-center p-4 bg-black/80 backdrop-blur-md" onclick="if(event.target===this)closePay()">
+    <div class="glass rounded-3xl max-w-lg w-full p-6 md:p-8 max-h-[92vh] overflow-y-auto" style="background:linear-gradient(180deg,#131A3F,#0A0F2A)">
+      <div class="flex items-center justify-between">
+        <h3 class="font-black text-xl flex items-center gap-2">
+          <span>👑</span> الترقية إلى ClipGenius PRO
+        </h3>
+        <button onclick="closePay()" class="w-8 h-8 rounded-xl glass-soft grid place-items-center hover:bg-white/10">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <div class="text-center mt-3 p-4 rounded-2xl bg-black/30 border border-white/10">
+        <div class="text-4xl md:text-5xl font-black grad-text">$6</div>
+        <div class="text-slate-400 text-xs mt-1">اشتراك شهري متجدد • يمكنك الإلغاء في أي ثانية بضغطة زر</div>
+        <div class="text-xs text-yellow-300 font-bold mt-2">
+          🎁 تذكر: كل 10 أصدقاء يشتركون عبر رابطك = شهر مجاني لك!
+        </div>
+      </div>
+
+      <div class="text-xs font-black text-slate-300 mt-5 mb-2">اختر طريقة الدفع المناسبة:</div>
+      <div class="grid grid-cols-3 gap-2">
+        <div id="pm-card" onclick="pickPay('card')" class="pay-card active rounded-2xl p-3 text-center bg-black/30">
+          <div class="font-black italic text-white text-base">VISA</div>
+          <div class="flex justify-center my-1" style="direction:ltr">
+            <span class="w-4 h-4 rounded-full bg-[#EB001B]"></span>
+            <span class="w-4 h-4 rounded-full bg-[#F79E1B] -ms-2 opacity-90"></span>
+          </div>
+          <div class="text-[10px] text-slate-300 font-bold">بطاقة بنكية</div>
+        </div>
+
+        <div id="pm-mastercard" onclick="pickPay('mastercard')" class="pay-card rounded-2xl p-3 text-center bg-black/30">
+          <div class="flex justify-center my-1" style="direction:ltr">
+            <span class="w-5 h-5 rounded-full bg-[#EB001B]"></span>
+            <span class="w-5 h-5 rounded-full bg-[#F79E1B] -ms-2.5 opacity-90"></span>
+          </div>
+          <div class="font-black text-xs text-white mt-1">Mastercard</div>
+          <div class="text-[9px] text-slate-400">بطاقة عالمية</div>
+        </div>
+
+        <div id="pm-binance" onclick="pickPay('binance')" class="pay-card rounded-2xl p-3 text-center bg-black/30">
+          <span class="text-2xl text-[#F0B90B]">⬢</span>
+          <div class="text-[11px] font-black text-yellow-300">Binance Pay</div>
+          <div class="text-[9px] text-slate-400">USDT / Crypto</div>
+        </div>
+      </div>
+
+      <!-- CARD FORM (VISA / MASTERCARD) -->
+      <div id="payCardForm" class="mt-4 space-y-3">
+        <div>
+          <label class="text-xs font-bold text-slate-400">رقم البطاقة (Visa / Mastercard)</label>
+          <div class="relative">
+            <input id="ccNum" maxlength="19" placeholder="4242 4242 4242 4242" class="mt-1 w-full bg-black/50 border border-white/15 rounded-xl px-4 py-3 text-sm font-mono tracking-widest text-white" dir="ltr" style="text-align:left" oninput="fmtCard(this)">
+            <i class="fa-solid fa-credit-card absolute end-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-slate-400">الاسم على البطاقة</label>
+            <input id="ccName" placeholder="MOHAMMED ALI" class="mt-1 w-full bg-black/50 border border-white/15 rounded-xl px-4 py-3 text-sm uppercase" dir="ltr" style="text-align:left">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-bold text-slate-400">الانتهاء</label>
+              <input id="ccExp" maxlength="5" placeholder="MM/YY" class="mt-1 w-full bg-black/50 border border-white/15 rounded-xl px-3 py-3 text-sm font-mono text-center" dir="ltr" oninput="fmtExp(this)">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-slate-400">CVC</label>
+              <input id="ccCvc" maxlength="4" placeholder="123" class="mt-1 w-full bg-black/50 border border-white/15 rounded-xl px-3 py-3 text-sm font-mono text-center" dir="ltr">
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 text-[11px] text-slate-400 pt-1">
+          <i class="fa-solid fa-lock text-emerald-400"></i>
+          <span>حماية مشفرة 256-bit عبر بوابة دفع عالمية مؤمنة</span>
+        </div>
+      </div>
+
+      <!-- BINANCE FORM -->
+      <div id="payBinForm" class="hidden mt-4 text-center bg-black/50 border border-[#F0B90B]/40 rounded-2xl p-5 space-y-3">
+        <div class="font-black text-[#F0B90B] text-sm flex items-center justify-center gap-2">
+          <span>⬢ الدفع عبر Binance Pay الرسمي</span>
+        </div>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&color=F0B90B&bgcolor=0B0E11&data=binance-pay-clipgenius-6usd-order77" class="mx-auto my-2 rounded-xl border border-[#F0B90B]/50" alt="Binance QR">
+        <div class="text-xs font-mono text-slate-300 bg-white/5 p-2 rounded-lg" dir="ltr">
+          Binance Pay ID: <b class="text-yellow-400">583 294 017</b> • Amount: <b>6.00 USDT</b>
+        </div>
+        <div class="text-[11px] text-slate-400">
+          امسح الرمز من تطبيق Binance ثم اضغط الزر أدناه لتأكيد التفعيل الفوري.
+        </div>
+      </div>
+
+      <button id="payBtn" onclick="doPay()" class="w-full mt-5 py-4 rounded-2xl font-black text-white neon-btn shine text-base">
+        <i class="fa-solid fa-lock me-1"></i> إتمام دفع 6$ وتفعيل باقة PRO
+      </button>
+
+      <div class="text-center text-[10px] text-slate-500 mt-2">
+        بضمان استرجاع 7 أيام إن لم تعجبك النتائج • دعم 24/7
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PREVIEW / PLAYER MODAL ================= -->
+  <div id="prevModal" class="hidden fixed inset-0 z-[80] grid place-items-center p-4 bg-black/85 backdrop-blur-md" onclick="if(event.target===this)closePrev()">
+    <div class="flex flex-col md:flex-row gap-5 items-center max-h-[92vh] overflow-y-auto">
+      <!-- Phone mockup container -->
+      <div class="shorts-frame !w-[270px] !h-[480px] !rounded-[28px] border-2 border-violet-500/50 shadow-2xl shrink-0">
+        <video id="prevVideo" class="w-full h-full" loop playsinline></video>
+        
+        <!-- Video overlays -->
+        <div class="absolute top-3 inset-x-3 flex justify-between items-center z-10">
+          <span id="prevScore" class="text-[10px] font-black bg-pink-500 text-white px-2.5 py-1 rounded-full shadow-lg">HOOK 98% 🔥</span>
+          <span id="prevDurBadge" class="text-[10px] font-black bg-black/80 text-cyan-300 px-2 py-1 rounded-full">30s ⏱️</span>
+        </div>
+
+        <!-- Animated Captions Area -->
+        <div class="absolute bottom-10 inset-x-3 text-center z-10 pointer-events-none">
+          <div id="prevCap" class="font-black text-base md:text-lg leading-snug" style="text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;"></div>
+        </div>
+
+        <div class="absolute bottom-2.5 inset-x-0 text-center text-[10px] font-bold text-white/70 z-10">
+          ClipGenius AI • MrBeast Captions ✨
+        </div>
+      </div>
+
+      <!-- Control Card -->
+      <div class="glass rounded-3xl p-6 w-[310px]">
+        <div class="text-xs font-black text-pink-400 mb-1 flex items-center gap-1">
+          <i class="fa-solid fa-bullhorn"></i> <span id="prevHookTypeLabel">AI Hook Viral Peak</span>
+        </div>
+        <h4 id="prevTitle" class="font-black text-sm text-white leading-snug">العنوان الفيروسي للشورت</h4>
+        <div id="prevMeta" class="text-xs text-slate-400 mt-2 space-y-1"></div>
+
+        <div class="flex gap-2 mt-5">
+          <button id="prevPlay" onclick="togglePrev()" class="neon-btn flex-1 py-2.5 rounded-xl text-xs font-black text-white">
+            <i class="fa-solid fa-pause"></i> إيقاف
+          </button>
+          <button onclick="closePrev()" class="glass-soft px-4 rounded-xl text-xs font-bold hover:bg-white/10">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <button onclick="downloadPrev()" class="gold-btn w-full mt-2.5 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-download"></i> <span>تحميل MP4 بجودة 4K</span>
+        </button>
+
+        <button onclick="toast('تم تجهيز الشورت للنشر المباشر على TikTok و Reels 🚀','ok')" class="w-full mt-2 glass-soft py-2.5 rounded-xl text-xs font-bold hover:bg-white/10">
+          <i class="fa-brands fa-tiktok text-pink-400 me-1"></i> نشر فوري على الحسابات
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toasts" class="fixed bottom-5 start-5 z-[100] space-y-2 max-w-[340px]"></div>
+
+  <!-- AI ASSISTANT POPUP BUTTON & CHAT -->
+  <button onclick="document.getElementById('aiChat').classList.toggle('hidden')" class="fixed bottom-5 end-5 z-[90] w-14 h-14 rounded-2xl grid place-items-center text-2xl text-white shadow-2xl hover:scale-110 transition" style="background:linear-gradient(135deg,#7C3AED,#06B6D4)">
+    🤖
+  </button>
+  <div id="aiChat" class="hidden fixed bottom-20 end-5 z-[90] w-[320px] glass rounded-3xl overflow-hidden shadow-2xl border border-white/20">
+    <div class="p-3.5 font-black text-xs flex items-center gap-2" style="background:linear-gradient(90deg,#7C3AED,#0891B2)">
+      <span class="w-7 h-7 rounded-xl bg-white/20 grid place-items-center text-sm">🤖</span>
+      <span>مساعد ClipGenius الفوري</span>
+      <span class="text-[9px] bg-emerald-400 text-black px-2 py-0.5 rounded-full ms-auto font-black">ONLINE</span>
+    </div>
+    <div id="chatBody" class="p-3 space-y-2 h-64 overflow-y-auto text-xs">
+      <div class="bg-white/10 rounded-2xl rounded-ss-sm p-3 text-xs leading-relaxed">
+        👋 مرحباً بك! أنا مساعدك الذكي. يمكنك سؤالي عن:
+        <br>• كيفية تحديد مدة الشورت يدوياً (10s إلى 90s).
+        <br>• طريقة عمل الهوكات بالذكاء الاصطناعي.
+        <br>• التجربة المجانية (5 فيديوهات) ثم اشتراك 6$.
+        <br>• نظام المكافآت (كل 10 مشتركين = شهر مجاني لك).
+      </div>
+    </div>
+    <div class="p-2 flex gap-2 border-t border-white/10 bg-black/40">
+      <input id="chatIn" placeholder="اكتب سؤالك هنا…" class="flex-1 bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs" onkeydown="if(event.key==='Enter')sendChat()">
+      <button onclick="sendChat()" class="neon-btn w-9 rounded-xl text-white">
+        <i class="fa-solid fa-paper-plane text-xs"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    /* ============ PERSISTENT DATABASE (localStorage) ============ */
+    const DB = {
+      get(k, fallback) {
+        try {
+          const v = JSON.parse(localStorage.getItem(k));
+          return v !== null ? v : fallback;
+        } catch(e) {
+          return fallback;
+        }
+      },
+      set(k, v) {
+        try {
+          localStorage.setItem(k, JSON.stringify(v));
+        } catch(e) {}
+      }
+    };
+
+    function seedDatabase() {
+      if (!localStorage.getItem('cg_users_v2')) {
+        const users = [
+          {
+            id: 'u_admin',
+            name: 'أحمد الإداري (Master Admin)',
+            email: 'admin@clipai.com',
+            pass: 'admin123',
+            role: 'admin',
+            credits: 999,
+            isPro: true,
+            proUntil: Date.now() + 365 * 864e5,
+            refCode: 'ADMIN-001',
+            invited: [],
+            paidRefs: 0,
+            bonus: 0,
+            spent: 0,
+            joined: Date.now() - 90 * 864e5
+          },
+          {
+            id: 'u_demo',
+            name: 'كريم التونسي',
+            email: 'user@demo.com',
+            pass: 'demo123',
+            role: 'user',
+            credits: 5,
+            isPro: false,
+            proUntil: 0,
+            refCode: 'DEMO-7X2K',
+            invited: [
+              { email: 'sami@mail.com', date: Date.now() - 6 * 864e5, sub: true },
+              { email: 'nadia@mail.com', date: Date.now() - 4 * 864e5, sub: true },
+              { email: 'farid@mail.com', date: Date.now() - 2 * 864e5, sub: true },
+              { email: 'amira@mail.com', date: Date.now() - 864e5, sub: false }
+            ],
+            paidRefs: 3,
+            bonus: 0,
+            spent: 0,
+            joined: Date.now() - 14 * 864e5
+          },
+          {
+            id: 'u_vip',
+            name: 'سارة مرابط',
+            email: 'sara@creator.com',
+            pass: '123456',
+            role: 'user',
+            credits: 0,
+            isPro: true,
+            proUntil: Date.now() + 25 * 864e5,
+            refCode: 'SARA-VIRAL',
+            invited: [],
+            paidRefs: 12,
+            bonus: 1, // earned 1 free month via 10 friends!
+            spent: 18,
+            joined: Date.now() - 45 * 864e5
+          }
+        ];
+        DB.set('cg_users_v2', users);
+      }
+
+      if (!localStorage.getItem('cg_tx_v2')) {
+        const txs = [
+          { id: 'tx_101', email: 'sara@creator.com', amount: 6, method: 'Visa •• 4242', status: 'paid', date: Date.now() - 25 * 864e5, label: 'اشتراك PRO شهري ($6)' },
+          { id: 'tx_102', email: 'sara@creator.com', amount: 6, method: 'Binance Pay', status: 'paid', date: Date.now() - 55 * 864e5, label: 'اشتراك PRO شهري ($6)' },
+          { id: 'tx_103', email: 'sara@creator.com', amount: 0, method: '🎁 مكافأة إحالة', status: 'bonus', date: Date.now() - 5 * 864e5, label: 'شهر PRO مجاني (مكافأة 10 مشتركين)' }
+        ];
+        DB.set('cg_tx_v2', txs);
+      }
+
+      if (!localStorage.getItem('cg_videos_v2')) {
+        DB.set('cg_videos_v2', []);
+      }
+    }
+    seedDatabase();
+
+    const getUsers = () => DB.get('cg_users_v2', []);
+    const saveUsers = (u) => DB.set('cg_users_v2', u);
+    const getTx = () => DB.get('cg_tx_v2', []);
+    const saveTx = (t) => DB.set('cg_tx_v2', t);
+    const getVids = () => DB.get('cg_videos_v2', []);
+    const saveVids = (v) => DB.set('cg_videos_v2', v);
+
+    const cur = () => DB.get('cg_session_v2', null);
+    const setCur = (e) => DB.set('cg_session_v2', e);
+
+    function me() {
+      const e = cur();
+      if (!e) return null;
+      return getUsers().find(u => u.email === e) || null;
+    }
+
+    function updateMe(patch) {
+      const users = getUsers();
+      const i = users.findIndex(u => u.email === cur());
+      if (i !== -1) {
+        users[i] = { ...users[i], ...patch };
+        saveUsers(users);
+      }
+    }
+
+    function isPro(u) {
+      return !!(u && u.isPro && u.proUntil > Date.now());
+    }
+
+    /* ============ MULTI-LANGUAGE I18N ============ */
+    const I18N = {
+      ar: {
+        nav_features: 'المميزات',
+        nav_how: 'كيف يعمل',
+        nav_pricing: 'الأسعار (6$)',
+        nav_referral: 'المكافآت (10=1 شهر)',
+        nav_faq: 'الأسئلة',
+        nav_login: 'تسجيل الدخول',
+        nav_cta: 'جرّب مجاناً (5 مقاطع)',
+        hero_badge: '5 فيديوهات مجانية • تحكم يدوي بالمدة • محرك الهوكات الخاطفة',
+        hero_title_a: 'حوّل أي فيديو يوتيوب',
+        hero_title_b: 'إلى شورتس بهوك فيروسي ومُدة مخصصة',
+        hero_sub: 'الذكاء الاصطناعي يستخرج أفضل الهوكات (Hooks) لجذب المشاهدين، يقص الفيديو عمودياً 9:16 بمدتك التي تحددها يدوياً (10 إلى 90 ثانية)، ويضيف ترجمة كاريوكي حركية. 5 تجارب مجانية بدون بطاقة ثم 6$/شهر فقط!',
+        hero_input_ph: 'الصق رابط يوتيوب هنا… https://youtube.com/watch?v=',
+        hero_btn: 'قص شورتس بهوك AI',
+        hero_free_note: '5 فيديوهات مجانية للمبتدئين',
+        hero_dur_note: 'تحكم كامل بالمدة يدويّاً',
+        hero_watch: 'شاهد المعاينة الحية',
+        trust: 'صانع محتوى وفريق تسويق يعتمد علينا',
+        stat1_l: 'شورت تم توليده بهوك',
+        stat2_l: 'صانع محتوى نشط',
+        stat3_l: 'تحكم يدوي بمدة الشورت (10-90s)',
+        stat4_l: 'دعوة = شهر مجاني كامل',
+        how_kicker: '⚡ كيف يعمل — 4 خطوات بسيطة',
+        how_title: 'من رابط يوتيوب إلى مشاهدات بالملايين',
+        how_sub: 'الذكاء الاصطناعي لا يكتفي بالقص العشوائي، بل يستخرج الهوكات الفعالة ويضبط المدة المناسبة تماماً لاحتياجك.',
+        s1_t: '1. الصق الرابط',
+        s1_d: 'ضع رابط بودكاست، مقابلة، فلوغ، محاضرة، مراجعة تقنية أو ألعاب حتى 3 ساعات.',
+        s2_t: '2. حدد المدة ونوع الهوك',
+        s2_d: 'حدد مدة الشورت يدوياً (15، 30، 60 ثانية أو مخصص) ونوع الهوك النفسي لجذب الانتباه فوراً.',
+        s3_t: '3. AI يمنتج ويترجم',
+        s3_d: 'تتبع تلقائي للوجوه (9:16)، ترجمة متحركة بستايل MrBeast، وإزالة تلقائية للصمت والوقفات.',
+        s4_t: '4. انشر واربح',
+        s4_d: 'حمّل بجودة 4K جاهزة لتيك توك وريلز وشورتس، وشارك رابطك لتربح شهور PRO مجانية كل 10 مشتركين!',
+        feat_kicker: '✨ استوديو AI متكامل',
+        feat_title: 'كل ما تحتاجه للسيطرة على خوارزميات الشورتس',
+        feat_sub: 'مصمم لصناع المحتوى والوكالات لتوفير 15 ساعة مونتاج أسبوعياً.',
+        demo_kicker: 'مثال واقعي — بودكاست تحول لشورت فيروسي',
+        demo_title: 'هوك قوي + تحديد يدوي بـ 35 ثانية = 3.2M مشاهدة',
+        demo_sub: 'فيديو يوتيوب طويل تم تحديد مدته يدوياً بـ 35 ثانية مع توليد هوك من نوع (صدمة وفضول). النتيجة: قفزة بنسبة 450% في معدل إكمال المشاهدة والمتابعين الجدد.',
+        price_kicker: '💎 أسعار لا تقبل المنافسة',
+        price_title: 'ابدأ مجاناً، ثم 6$ شهرياً فقط',
+        price_sub: 'نمنحك 5 فيديوهات مجانية لتتأكد من جودة الهوكات والمدد. بعدها اشتراك شهري بسيط بـ 6$ فقط مع خيارات دفع: فيزا، ماستركارد، وبينانس.',
+        free_t: 'التجربة المجانية',
+        free_f1: '5 فيديوهات يوتيوب كاملة مجاناً',
+        free_f2: 'تحكم يدوي بمدة الشورت (15s إلى 90s)',
+        pro_t: 'اشتراك PRO الكامل',
+        pro_btn: 'اشترك الآن بـ 6$ / شهر',
+        pro_f1: 'فيديوهات وتحويلات غير محدودة شهرياً',
+        pro_f2: 'تحكم دقيق بالثواني (10s إلى 90s) لكل مقطع',
+        ref_kicker: 'نظام المكافآت الحصري — شارك واربح',
+        ref_title: 'كل 10 أصدقاء يشتركون = شهر PRO مجاني لك!',
+        ref_sub: 'عندما يشترك 10 أشخاص من خلال رابط الدعوة الخاص بك في باقة الـ 6$، يضاف إلى حسابك تلقائياً شهر مجاني كامل من اشتراك PRO. لا يوجد حد أقصى: 20 مشتركاً = شهران مجانيان!',
+        ref_step1_t: '1. انسخ رابطك',
+        ref_step1_d: 'رابط فريد وكود خاص بحسابك',
+        ref_step2_t: '2. شارك مع صناع المحتوى',
+        ref_step2_d: 'عبر تيك توك، واتساب، وتيليغرام',
+        ref_step3_t: '3. استمتع بالمجان',
+        ref_step3_d: 'تفعيل آلي فور وصول المشترك العاشر',
+        ref_cta: 'احصل على رابط الدعوة الآن',
+        pay_title: '💳 طرق دفع عالمية آمنة وموثوقة 100%',
+        pay_sub: 'تشفير SSL 256-bit • دعم حماية 3D Secure • بدون مصاريف خفية • تفعيل فوري للاشتراك',
+        faq_kicker: '❓ الأسئلة المتكررة',
+        faq_title: 'كل ما تريد معرفته عن ClipGenius',
+        cta_title: 'جاهز لصناعة أول شورت بهوك فيروسي؟',
+        cta_sub: 'انضم لآلاف صناع المحتوى. 5 فيديوهات مجانية تنتظرك فور التسجيل بدون إدخال أي بطاقة.',
+        cta_btn: 'ابدأ بـ 5 فيديوهات مجاناً الآن',
+        footer_desc: 'المنصة الذكية الأولى لتحويل فيديوهات يوتيوب إلى مقاطع قصيرة بهوكات قوية لجذب ملايين المشاهدات مع تحكم دقيق بالمدة ونظام مكافآت كريم.',
+        footer_prod: 'المنتج',
+        footer_comp: 'الموقع والإدارة',
+        footer_rights: '© 2026 ClipGenius AI — جميع الحقوق محفوظة • تجربة 5 فيديوهات مجانية ثم 6$ شهرياً'
+      },
+      en: {
+        nav_features: 'Features',
+        nav_how: 'How It Works',
+        nav_pricing: 'Pricing ($6)',
+        nav_referral: 'Rewards (10=1 Mo)',
+        nav_faq: 'FAQ',
+        nav_login: 'Sign In',
+        nav_cta: 'Try Free (5 Clips)',
+        hero_badge: '5 Free Videos • Manual Duration Control • Viral AI Hook Engine',
+        hero_title_a: 'Turn any YouTube video',
+        hero_title_b: 'into viral Shorts with AI Hook & custom duration',
+        hero_sub: 'AI extracts peak retention hooks to grab viewers in the first 3 seconds, crops vertically to 9:16 based on your custom duration (10s to 90s), and overlays animated karaoke captions. 5 free trials without credit card, then only $6/month!',
+        hero_input_ph: 'Paste YouTube link here… https://youtube.com/watch?v=',
+        hero_btn: 'Generate AI Hook Shorts',
+        hero_free_note: '5 free full videos',
+        hero_dur_note: 'Full manual duration control',
+        hero_watch: 'Watch Live Demo',
+        trust: 'creators and marketing teams trust us',
+        stat1_l: 'Viral Shorts Generated',
+        stat2_l: 'Active Creators',
+        stat3_l: 'Manual Duration (10s - 90s)',
+        stat4_l: 'Subscribers = 1 Free Month',
+        how_kicker: '⚡ How It Works — 4 Easy Steps',
+        how_title: 'From YouTube Link to Millions of Views',
+        how_sub: 'No random cropping. AI captures viral hooks and trims the exact manual duration you want.',
+        s1_t: '1. Paste Link',
+        s1_d: 'Any YouTube podcast, interview, vlog, or tech review up to 3 hours.',
+        s2_t: '2. Set Duration & Hook',
+        s2_d: 'Pick manual duration (15s, 30s, 60s or custom) plus psychology hook type.',
+        s3_t: '3. AI Auto Edit & Captions',
+        s3_d: '9:16 face tracking, MrBeast styled animations, and smart pause removal.',
+        s4_t: '4. Publish & Earn',
+        s4_d: 'Download in 4K, share your invite link: every 10 subscribers = 1 free PRO month!',
+        feat_kicker: '✨ Complete AI Studio',
+        feat_title: 'Dominate TikTok, Reels & Shorts Algorithms',
+        feat_sub: 'Engineered for creators and agencies to save 15+ hours of editing weekly.',
+        demo_kicker: 'Real Case Study — Podcast to Viral Short',
+        demo_title: 'Killer Hook + Manual 35s Trim = 3.2M Views',
+        demo_sub: 'A long podcast trimmed manually to 35 seconds with an AI Curiosity Hook resulted in +450% viewer retention.',
+        price_kicker: '💎 Unbeatable Pricing',
+        price_title: 'Start Free, then just $6 / month',
+        price_sub: 'Enjoy 5 free videos first. Then unlock unlimited conversions for just $6/month via Visa, Mastercard, or Binance Pay.',
+        free_t: 'Free Trial',
+        free_f1: '5 full YouTube videos free',
+        free_f2: 'Manual duration control (15s to 90s)',
+        pro_t: 'Full PRO Membership',
+        pro_btn: 'Subscribe Now — $6 / Month',
+        pro_f1: 'Unlimited videos & conversions',
+        pro_f2: 'Precise second-by-second duration (10s - 90s)',
+        ref_kicker: 'Exclusive Referral Rewards',
+        ref_title: 'Every 10 Friends Who Subscribe = 1 Free PRO Month!',
+        ref_sub: 'Share your personal link. When 10 people subscribe to the $6 plan, you automatically get 1 free PRO month credited. No limit: 20 subs = 2 months free!',
+        ref_step1_t: '1. Copy Your Link',
+        ref_step1_d: 'Unique invite link + promo code',
+        ref_step2_t: '2. Share with Creators',
+        ref_step2_d: 'TikTok, WhatsApp, YouTube, Telegram',
+        ref_step3_t: '3. Enjoy Free Access',
+        ref_step3_d: 'Auto-credited upon 10th subscriber',
+        ref_cta: 'Get My Invite Link Now',
+        pay_title: '💳 100% Secure Global Payments',
+        pay_sub: '256-bit SSL encryption • 3D Secure Protection • Visa, Mastercard & Binance Pay supported',
+        faq_kicker: '❓ Frequently Asked Questions',
+        faq_title: 'Everything you need to know about ClipGenius',
+        cta_title: 'Ready for your first viral AI hook Short?',
+        cta_sub: 'Join thousands of creators. 5 free videos are waiting in your account without any credit card.',
+        cta_btn: 'Start with 5 Free Videos Now',
+        footer_desc: 'The leading AI platform transforming long YouTube videos into viral shorts with high-impact hooks and manual duration controls.',
+        footer_prod: 'Product',
+        footer_comp: 'Platform & Admin',
+        footer_rights: '© 2026 ClipGenius AI — All rights reserved • 5 Free Videos then $6/month'
+      },
+      fr: {
+        nav_features: 'Fonctionnalités',
+        nav_how: 'Comment ça marche',
+        nav_pricing: 'Tarifs (6$)',
+        nav_referral: 'Récompenses (10=1 mois)',
+        nav_faq: 'FAQ',
+        nav_login: 'Connexion',
+        nav_cta: 'Essai Gratuit (5 Vidéos)',
+        hero_badge: '5 vidéos gratuites • Durée manuelle • Moteur de Hooks IA',
+        hero_title_a: 'Transformez toute vidéo YouTube',
+        hero_title_b: 'en Shorts viraux avec Hook IA & durée sur mesure',
+        hero_sub: 'L\'IA extrait les meilleurs hooks pour captiver les 3 premières secondes, recadre en 9:16 avec votre durée manuelle (10s à 90s) et ajoute des sous-titres animés karaoké. 5 essais gratuits sans carte, puis 6$/mois seulement !',
+        hero_input_ph: 'Collez le lien YouTube ici… https://youtube.com/watch?v=',
+        hero_btn: 'Générer des Shorts IA',
+        hero_free_note: '5 vidéos offertes',
+        hero_dur_note: 'Durée manuelle ajustable',
+        hero_watch: 'Voir la Démo',
+        trust: 'créateurs et agences nous font confiance',
+        stat1_l: 'Shorts Viraux Générés',
+        stat2_l: 'Créateurs Actifs',
+        stat3_l: 'Durée Réglable (10s à 90s)',
+        stat4_l: 'Abonnés = 1 Mois Offert',
+        how_kicker: '⚡ Comment ça marche — 4 étapes',
+        how_title: 'Du lien YouTube à des millions de vues',
+        how_sub: 'Pas de découpe aléatoire. L\'IA cible le hook viral et applique la durée exacte que vous avez choisie.',
+        s1_t: '1. Collez le lien',
+        s1_d: 'Podcast, interview, vlog ou tutoriel jusqu\'à 3 heures.',
+        s2_t: '2. Fixez la durée et le hook',
+        s2_d: 'Définissez la durée manuelle (15s, 30s, 60s) et le style de hook psychologique.',
+        s3_t: '3. Montage & Sous-titres IA',
+        s3_d: 'Recadrage visage 9:16, style MrBeast et suppression automatique des silences.',
+        s4_t: '4. Publiez et Gagnez',
+        s4_d: 'Téléchargez en 4K. Partagez votre lien : 10 abonnés = 1 mois PRO gratuit pour vous !',
+        feat_kicker: '✨ Studio IA Tout-en-un',
+        feat_title: 'Dominez l\'algorithme TikTok, Reels et Shorts',
+        feat_sub: 'Conçu pour faire économiser 15 heures de montage chaque semaine.',
+        demo_kicker: 'Cas concret — Podcast vers Short viral',
+        demo_title: 'Hook Choc + Durée Manuelle 35s = 3.2M de Vues',
+        demo_sub: 'Un extrait podcast calibré à 35s avec un hook de curiosité a obtenu un taux de rétention de 92%.',
+        price_kicker: '💎 Tarification Imbattable',
+        price_title: 'Démarrez gratuit, puis 6$ par mois seulement',
+        price_sub: '5 vidéos complètes gratuites. Ensuite, passez à l\'illimité pour 6$/mois avec Visa, Mastercard ou Binance Pay.',
+        free_t: 'Essai Gratuit',
+        free_f1: '5 vidéos YouTube gratuites',
+        free_f2: 'Contrôle manuel de durée (15s à 90s)',
+        pro_t: 'Abonnement PRO Complet',
+        pro_btn: 'S\'abonner — 6$ / Mois',
+        pro_f1: 'Vidéos & conversions illimitées',
+        pro_f2: 'Durée ultra-précise (10s à 90s)',
+        ref_kicker: 'Programme de Parrainage Exclusif',
+        ref_title: 'Tous les 10 Amis Abonnés = 1 Mois PRO Offert !',
+        ref_sub: 'Partagez votre lien. Dès que 10 personnes s\'abonnent à 6$, vous gagnez 1 mois gratuit automatiquement. Pas de limite : 20 abonnés = 2 mois offerts !',
+        ref_step1_t: '1. Copiez votre lien',
+        ref_step1_d: 'Lien unique & code promo',
+        ref_step2_t: '2. Partagez',
+        ref_step2_d: 'WhatsApp, Telegram, TikTok',
+        ref_step3_t: '3. Profitez du Gratuit',
+        ref_step3_d: 'Crédité au 10ème abonné',
+        ref_cta: 'Obtenir mon lien maintenant',
+        pay_title: '💳 Paiements Mondiaux 100% Sécurisés',
+        pay_sub: 'Cryptage SSL 256-bit • 3D Secure • Visa, Mastercard & Binance Pay',
+        faq_kicker: '❓ Foire Aux Questions',
+        faq_title: 'Tout ce que vous devez savoir sur ClipGenius',
+        cta_title: 'Prêt pour votre premier Short viral avec Hook ?',
+        cta_sub: 'Rejoignez des milliers de créateurs. 5 vidéos gratuites vous attendent sans carte bancaire.',
+        cta_btn: 'Commencer avec 5 vidéos gratuites',
+        footer_desc: 'La première plateforme IA pour découper les longues vidéos YouTube en Shorts viraux avec des hooks percutants et un contrôle manuel de durée.',
+        footer_prod: 'Produit',
+        footer_comp: 'Plateforme & Admin',
+        footer_rights: '© 2026 ClipGenius AI — Tous droits réservés • 5 vidéos gratuites puis 6$/mois'
+      }
+    };
+
+    let LANG = DB.get('cg_lang', 'ar');
+
+    function setLang(l) {
+      LANG = l;
+      DB.set('cg_lang', l);
+      document.documentElement.lang = l;
+      document.documentElement.dir = (l === 'ar' ? 'rtl' : 'ltr');
+      
+      const label = (l === 'ar' ? 'العربية' : l === 'en' ? 'English' : 'Français');
+      document.getElementById('langLabel').textContent = label;
+      document.getElementById('langMenu').classList.add('hidden');
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const k = el.dataset.i18n;
+        if (I18N[l] && I18N[l][k]) {
+          el.textContent = I18N[l][k];
+        }
+      });
+
+      document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        const k = el.dataset.i18nPh;
+        if (I18N[l] && I18N[l][k]) {
+          el.placeholder = I18N[l][k];
+        }
+      });
+
+      buildFaq();
+      buildFeatures();
+      renderLogos();
+    }
+
+    /* ============ DURATION & HOOK STATE ============ */
+    let selectedDuration = 30; // seconds (manual duration)
+    let selectedHookType = 'shock';
+    let tplStyle = 'beast';
+    let payMethod = 'card';
+    let currentClips = [];
+    let playingCapTimer = null;
+    let prevSrc = '';
+
+    function onDurSliderChange(val) {
+      selectedDuration = parseInt(val, 10);
+      document.getElementById('durValLabel').textContent = selectedDuration + ' ' + (LANG==='ar'?'ثانية':LANG==='fr'?'secondes':'seconds');
+      document.querySelectorAll('.dur-preset').forEach(b => {
+        b.classList.remove('border-cyan-400', 'text-cyan-300', 'bg-cyan-400/10');
+      });
+    }
+
+    function setPresetDur(sec) {
+      selectedDuration = sec;
+      document.getElementById('customDur').value = sec;
+      document.getElementById('durValLabel').textContent = sec + ' ' + (LANG==='ar'?'ثانية':LANG==='fr'?'secondes':'seconds');
+      document.querySelectorAll('.dur-preset').forEach(b => {
+        const matches = b.textContent.includes(String(sec));
+        b.classList.toggle('border-cyan-400', matches);
+        b.classList.toggle('text-cyan-300', matches);
+        b.classList.toggle('bg-cyan-400/10', matches);
+      });
+    }
+
+    function pickHookType(el, type) {
+      selectedHookType = type;
+      document.querySelectorAll('.hook-box').forEach(b => {
+        b.classList.remove('active', 'border-pink-500/50', 'bg-pink-500/15');
+        b.classList.add('border-white/10', 'bg-black/20');
+      });
+      el.classList.add('active', 'border-pink-500/50', 'bg-pink-500/15');
+      el.classList.remove('border-white/10', 'bg-black/20');
+      toast(LANG === 'ar' ? 'تم اختيار هوك: ' + type : 'Selected hook: ' + type, 'ok');
+    }
+
+    /* ============ NAVIGATION & ROUTING ============ */
+    function showView(v) {
+      ['landing', 'auth', 'dash', 'admin'].forEach(x => {
+        document.getElementById('view-' + x).classList.add('hidden');
+      });
+      document.getElementById('view-' + v).classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (v === 'dash') refreshDash();
+      if (v === 'admin') {
+        const u = me();
+        if (!u || u.role !== 'admin') {
+          toast(LANG === 'ar' ? '⛔ منطقة الإدارة تتطلب حساب مسؤول' : 'Admin only area', 'err');
+          showView('landing');
+          return;
+        }
+        refreshAdmin();
+      }
+    }
+
+    function onCta() {
+      if (me()) showView('dash');
+      else {
+        showView('auth');
+        authTab('reg');
+      }
+    }
+
+    function onSubscribe() {
+      const u = me();
+      if (!u) {
+        showView('auth');
+        authTab('reg');
+        toast(LANG === 'ar' ? 'أنشئ حسابك أولاً (5 فيديوهات مجانية) 🎁' : 'Create account first (5 free videos) 🎁', 'ok');
+        return;
+      }
+      showView('dash');
+      setTimeout(openPay, 300);
+    }
+
+    function heroConvert() {
+      const url = document.getElementById('heroUrl').value.trim();
+      if (!me()) {
+        if (url) sessionStorage.setItem('pendingUrl', url);
+        showView('auth');
+        toast(LANG === 'ar' ? 'سجّل حسابك الآن واحصل على 5 فيديوهات مجانية 🎉' : 'Sign up now for 5 free videos 🎉', 'ok');
+        return;
+      }
+      showView('dash');
+      if (url) {
+        document.getElementById('videoUrl').value = url;
+        fetchMeta();
+      }
+    }
+
+    function quickAdmin(e) {
+      if (e) e.preventDefault();
+      showView('auth');
+      authTab('login');
+      fillDemo('admin');
+    }
+
+    /* ============ AUTHENTICATION ============ */
+    function authTab(tab) {
+      const isLogin = tab === 'login';
+      document.getElementById('formLogin').classList.toggle('hidden', !isLogin);
+      document.getElementById('formReg').classList.toggle('hidden', isLogin);
+      document.getElementById('tabLogin').classList.toggle('active', isLogin);
+      document.getElementById('tabReg').classList.toggle('active', !isLogin);
+      document.getElementById('tabLogin').classList.toggle('text-slate-400', !isLogin);
+      document.getElementById('tabReg').classList.toggle('text-slate-400', isLogin);
+    }
+
+    function fillDemo(who) {
+      if (who === 'admin') {
+        document.getElementById('li_email').value = 'admin@clipai.com';
+        document.getElementById('li_pass').value = 'admin123';
+      } else {
+        document.getElementById('li_email').value = 'user@demo.com';
+        document.getElementById('li_pass').value = 'demo123';
+      }
+      toast(LANG === 'ar' ? 'تم تعبئة البيانات — اضغط دخول الآن 👇' : 'Credentials filled — click login 👇', 'ok');
+    }
+
+    function doLogin() {
+      const email = document.getElementById('li_email').value.trim().toLowerCase();
+      const pass = document.getElementById('li_pass').value;
+      const user = getUsers().find(u => u.email === email && u.pass === pass);
+
+      if (!user) {
+        toast(LANG === 'ar' ? '❌ بيانات الدخول غير صحيحة' : 'Invalid email or password', 'err');
+        return;
+      }
+
+      setCur(user.email);
+      toast((LANG === 'ar' ? 'مرحباً بعودتك ' : 'Welcome back ') + user.name.split(' ')[0] + ' 👋', 'ok');
+
+      const pend = sessionStorage.getItem('pendingUrl');
+      sessionStorage.removeItem('pendingUrl');
+
+      if (user.role === 'admin') {
+        showView('admin');
+      } else {
+        showView('dash');
+        if (pend) {
+          document.getElementById('videoUrl').value = pend;
+          fetchMeta();
+        }
+      }
+    }
+
+    function doRegister() {
+      const name = document.getElementById('rg_name').value.trim();
+      const email = document.getElementById('rg_email').value.trim().toLowerCase();
+      const pass = document.getElementById('rg_pass').value;
+      const ref = document.getElementById('rg_ref').value.trim().toUpperCase();
+
+      if (name.length < 2) {
+        toast(LANG === 'ar' ? '❌ الرجاء إدخال الاسم كاملاً' : 'Enter your full name', 'err');
+        return;
+      }
+      if (!/^\S+@\S+\.\S+$/.test(email)) {
+        toast(LANG === 'ar' ? '❌ البريد الإلكتروني غير صحيح' : 'Invalid email format', 'err');
+        return;
+      }
+      if (pass.length < 6) {
+        toast(LANG === 'ar' ? '❌ كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be 6+ chars', 'err');
+        return;
+      }
+
+      const users = getUsers();
+      if (users.some(u => u.email === email)) {
+        toast(LANG === 'ar' ? '❌ هذا البريد مسجل مسبقاً، تفضل بتسجيل الدخول' : 'Email already exists. Log in instead', 'err');
+        return;
+      }
+
+      // Generate unique referral code
+      const code = (name.replace(/[^A-Za-z]/g, '').slice(0, 4).toUpperCase() || 'USER') +
+                   '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+
+      const newUser = {
+        id: 'u_' + Date.now(),
+        name,
+        email,
+        pass,
+        role: 'user',
+        credits: 5, // 5 Free videos
+        isPro: false,
+        proUntil: 0,
+        refCode: code,
+        invited: [],
+        paidRefs: 0,
+        bonus: 0,
+        spent: 0,
+        joined: Date.now()
+      };
+
+      // Check if referred by someone
+      if (ref) {
+        const referrer = users.find(u => u.refCode === ref);
+        if (referrer) {
+          referrer.invited.push({ email, date: Date.now(), sub: false });
+          toast(LANG === 'ar' ? '🎁 تم تطبيق كود الدعوة: ' + ref : 'Referral code applied: ' + ref, 'ok');
+        }
+      }
+
+      users.push(newUser);
+      saveUsers(users);
+      setCur(email);
+
+      triggerConfetti();
+      toast(LANG === 'ar' ? '🎉 تم تفعيل حسابك مع 5 فيديوهات مجانية!' : '🎉 Account created with 5 free videos!', 'ok');
+      showView('dash');
+    }
+
+    function logout() {
+      localStorage.removeItem('cg_session_v2');
+      DB.set('cg_session_v2', null);
+      showView('landing');
+      toast(LANG === 'ar' ? 'تم تسجيل الخروج بنجاح 👋' : 'Logged out successfully 👋', 'ok');
+    }
+
+    /* ============ DASHBOARD LOGIC ============ */
+    function dashTab(tabName, btn) {
+      document.querySelectorAll('#dashSide .sidebar-link').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      ['create', 'clips', 'sub', 'ref', 'tx', 'set'].forEach(x => {
+        const el = document.getElementById('dtab-' + x);
+        if (el) el.classList.add('hidden');
+      });
+
+      const target = document.getElementById('dtab-' + tabName);
+      if (target) target.classList.remove('hidden');
+
+      if (tabName === 'tx') renderTx();
+      if (tabName === 'clips') renderClips();
+      if (tabName === 'ref') renderRef();
+    }
+
+    function refreshDash() {
+      const u = me();
+      if (!u) {
+        showView('auth');
+        return;
+      }
+
+      document.getElementById('dashName').textContent = u.name;
+      document.getElementById('dashEmail').textContent = u.email;
+      document.getElementById('dashAvatar').textContent = (u.name.trim()[0] || 'U').toUpperCase();
+      
+      const proActive = isPro(u);
+      document.getElementById('dashCredits').textContent = proActive ? '∞ (Unlimited)' : u.credits;
+      document.getElementById('dashProBadge').innerHTML = proActive
+        ? '<span class="badge-pro text-[10px] px-2.5 py-0.5 rounded-full">👑 PRO ACTIVE</span>'
+        : '<span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-slate-300">FREE TRIAL</span>';
+
+      document.getElementById('adminGoBtn').classList.toggle('hidden', u.role !== 'admin');
+
+      document.getElementById('costLbl').textContent = proActive
+        ? (LANG === 'ar' ? 'مشمول في PRO غير المحدود ♾️' : 'Included in unlimited PRO ♾️')
+        : (LANG === 'ar' ? 'يستهلك 1 من فيديوهاتك المجانية (' + u.credits + ' متبقية)' : 'Consumes 1 free video (' + u.credits + ' remaining)');
+
+      document.getElementById('setName').value = u.name;
+
+      document.getElementById('subTitle').textContent = proActive
+        ? (LANG === 'ar' ? '👑 باقة PRO نشطة حتى: ' : '👑 PRO active until: ') + new Date(u.proUntil).toLocaleDateString()
+        : (LANG === 'ar' ? 'الحالة: تجريبي مجاني (' + u.credits + ' فيديوهات متبقية)' : 'Status: Free trial (' + u.credits + ' videos left)');
+
+      document.getElementById('subDesc').textContent = proActive
+        ? (LANG === 'ar' ? 'تمتلك شورتس غير محدودة، جودة 4K، وتوليد كامل للهوكات بالذكاء الاصطناعي.' : 'Upgrade for $6/month for unlimited conversions and manual duration settings.')
+        : (LANG === 'ar' ? 'اشترك بـ 6$/شهرياً للمقاطع غير المحدودة والتحكم الكامل بالمدة' : 'Subscribe for $6/month for unlimited videos and custom manual duration.');
+
+      renderRef();
+      renderTx();
+      renderClips();
+    }
+
+    function ytID(url) {
+      if (!url) return null;
+      const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{6,20})/);
+      return m ? m[1] : null;
+    }
+
+    async function fetchMeta() {
+      const url = document.getElementById('videoUrl').value.trim();
+      const id = ytID(url);
+      if (!id) {
+        toast(LANG === 'ar' ? '❌ رابط يوتيوب غير صالح' : 'Invalid YouTube URL', 'err');
+        return;
+      }
+
+      const box = document.getElementById('metaBox');
+      box.classList.remove('hidden');
+      document.getElementById('metaThumb').src = 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg';
+      document.getElementById('metaTitle').textContent = (LANG === 'ar' ? '⏳ جلب عنوان الفيديو…' : 'Fetching video info…');
+
+      try {
+        const res = await fetch('https://noembed.com/embed?url=' + encodeURIComponent(url));
+        const json = await res.json();
+        document.getElementById('metaTitle').textContent = '🎬 ' + (json.title || 'YouTube Video');
+        document.getElementById('metaInfo').textContent = '👤 ' + (json.author_name || 'Channel') + ' • ID: ' + id + ' • جاهز للقص بالهوك والمدة المحددة ✅';
+      } catch (err) {
+        document.getElementById('metaTitle').textContent = '🎬 YouTube Video • ' + id;
+        document.getElementById('metaInfo').textContent = 'جاهز للتوليد بالذكاء الاصطناعي ✅';
+      }
+    }
+
+    /* ============ AI HOOKS & SAMPLE VIDEOS ============ */
+    const HOOK_PRESETS = {
+      shock: {
+        ar: [
+          'لن تصدق ماذا حدث في الثانية 15! 😱',
+          'هذا المشهد صدم 3 ملايين مشاهد! 🔥',
+          'انتبه! هذه اللحظة غيرت مجرى الحديث كلياً 🤯'
+        ],
+        en: [
+          'You won\'t believe what happened next! 😱',
+          'This shocking moment broke the internet! 🔥',
+          'WAIT! The ending changed everything 🤯'
+        ],
+        fr: [
+          'Incroyable ce qui s\'est passé ensuite ! 😱',
+          'Ce moment a choqué 3 millions de personnes ! 🔥',
+          'ATTENDEZ ! La fin a tout bouleversé 🤯'
+        ]
+      },
+      curiosity: {
+        ar: [
+          'السر الذي يخفيه 99% من الأثرياء عنك 🤫',
+          'كيف حقق هذه النتيجة بدون أي خبرة؟ 📈',
+          'المعلومة التي يبحث عنها الجميع 🎯'
+        ],
+        en: [
+          'The secret 99% of people will never know 🤫',
+          'How he achieved this with 0 experience 📈',
+          'The exact formula nobody shares 🎯'
+        ],
+        fr: [
+          'Le secret que 99% des gens ignorent 🤫',
+          'Comment il a réussi sans aucune expérience 📈',
+          'L\'astuce que personne ne partage 🎯'
+        ]
+      },
+      mistake: {
+        ar: [
+          'توقف عن فعل هذا الخطأ القاتل فوراً! ⛔',
+          '3 أخطاء تدمر نتائجك وأنت لا تدري ❌',
+          'إذا كنت تفعل هذا، فأنت تضيع وقتك ⚠️'
+        ],
+        en: [
+          'STOP making this huge mistake right now! ⛔',
+          '3 mistakes that are killing your growth ❌',
+          'If you do this, you are wasting your time ⚠️'
+        ],
+        fr: [
+          'ARRÊTEZ de faire cette erreur immédiatement ! ⛔',
+          '3 erreurs qui détruisent vos résultats ❌',
+          'Si vous faites ça, vous perdez votre temps ⚠️'
+        ]
+      }
+    };
+
+    const SAMPLE_VIDEOS = [
+      'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+      'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+      'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+      'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4'
+    ];
+
+    function fmtTime(s) {
+      s = Math.floor(s);
+      return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }
+
+    async function startProcess() {
+      const u = me();
+      if (!u) return;
+
+      const url = document.getElementById('videoUrl').value.trim();
+      const id = ytID(url);
+      if (!id) {
+        toast(LANG === 'ar' ? '❌ الرجاء إدخال رابط يوتيوب صحيح' : 'Please provide a valid YouTube URL', 'err');
+        return;
+      }
+
+      if (!isPro(u) && u.credits <= 0) {
+        toast(LANG === 'ar' ? '🎟️ انتهت تجاربك المجانية الخمس! اشترك بـ 6$ للمتابعة غير المحدودة' : 'Free trial finished! Upgrade for $6/month', 'err');
+        openPay();
+        return;
+      }
+
+      // Deduct credit if on free tier
+      if (!isPro(u)) {
+        updateMe({ credits: u.credits - 1 });
+      }
+
+      const count = parseInt(document.getElementById('clipNum').value, 10) || 4;
+      const lang = document.getElementById('capLang').value || 'ar';
+      const durationSec = selectedDuration; // manual duration from slider / preset
+      const hookCat = selectedHookType;
+
+      document.getElementById('resultBox').classList.add('hidden');
+      const pb = document.getElementById('processBox');
+      pb.classList.remove('hidden');
+      pb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      const bar = document.getElementById('procBar');
+      const pct = document.getElementById('procPct');
+      const log = document.getElementById('procLog');
+      log.innerHTML = '';
+
+      document.querySelectorAll('#procSteps div').forEach(d => {
+        d.style.borderColor = 'rgba(255,255,255,0.1)';
+        d.querySelector('.st').textContent = (LANG === 'ar' ? 'بانتظار…' : 'Waiting…');
+        d.querySelector('.st').className = 'st text-slate-500 text-[10px]';
+      });
+
+      const logsList = [
+        ['📥 Downloading audio & video streams at 1080p60 (' + id + ')…', 0],
+        ['🎙️ Whisper-v3: transcribing audio transcript & detecting tone peaks…', 1],
+        ['🎯 AI Hook Engine: identifying highest curiosity gap with [' + hookCat.toUpperCase() + '] style…', 1],
+        ['⏱️ Manual Duration Lock: cropping clips to exact ' + durationSec + ' seconds duration…', 2],
+        ['✂️ 9:16 Smart Face-Tracking: auto-reframing subject in center…', 3],
+        ['💬 MrBeast Karaoke Captions rendering with dynamic word highlights…', 3],
+        ['🔥 Retention analysis complete: Hook Score 98.4% applied', 3],
+        ['✅ Ready to download: ' + count + ' Shorts exported successfully', 3]
+      ];
+
+      for (let i = 0; i < logsList.length; i++) {
+        const p = Math.round(((i + 1) / logsList.length) * 100);
+        bar.style.width = p + '%';
+        pct.textContent = p + '%';
+
+        const stepIdx = logsList[i][1];
+        const stepEl = document.querySelector('#procSteps [data-s="' + stepIdx + '"]');
+        if (stepEl) {
+          stepEl.style.borderColor = '#22D3EE';
+          stepEl.querySelector('.st').textContent = (LANG === 'ar' ? 'جارٍ…' : 'In progress…');
+          stepEl.querySelector('.st').className = 'st text-cyan-300 text-[10px]';
+        }
+
+        const l = document.createElement('div');
+        l.innerHTML = '<span class="text-slate-500">[' + new Date().toLocaleTimeString() + ']</span> ' + logsList[i][0];
+        log.appendChild(l);
+        log.scrollTop = 99999;
+
+        await new Promise(r => setTimeout(r, 450 + Math.random() * 350));
+
+        if (stepEl) {
+          stepEl.querySelector('.st').textContent = '✅ ' + (LANG === 'ar' ? 'تم' : 'Done');
+          stepEl.querySelector('.st').className = 'st text-emerald-400 text-[10px] font-bold';
+        }
+      }
+
+      // Generate Clips Objects
+      const hookPool = (HOOK_PRESETS[hookCat] && HOOK_PRESETS[hookCat][lang]) || HOOK_PRESETS['shock']['ar'];
+      currentClips = [];
+
+      for (let i = 0; i < count; i++) {
+        const startSec = Math.floor(Math.random() * 1200 + 40);
+        const score = 88 + Math.floor(Math.random() * 12);
+        const hookText = hookPool[i % hookPool.length];
+
+        currentClips.push({
+          id: 'c_' + Date.now() + '_' + i,
+          yt: id,
+          thumb: 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg',
+          seed: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400&h=700&fit=crop&q=80',
+          video: SAMPLE_VIDEOS[i % SAMPLE_VIDEOS.length],
+          title: hookText,
+          hookCat,
+          cap: hookText + ' • ' + (LANG === 'ar' ? 'انتظر المفاجأة الكبرى بالنهاية 🔥' : 'Wait for the huge twist at the end 🔥'),
+          start: fmtTime(startSec),
+          dur: durationSec, // Exact manual duration requested
+          score,
+          date: Date.now(),
+          tpl: tplStyle
+        });
+      }
+
+      // Save to global videos
+      const allVids = getVids();
+      allVids.unshift({
+        email: u.email,
+        yt: id,
+        date: Date.now(),
+        count,
+        dur: durationSec,
+        clips: currentClips
+      });
+      saveVids(allVids);
+
+      renderResults();
+      refreshDash();
+      triggerConfetti();
+      toast(LANG === 'ar' ? '🎉 تم توليد ' + count + ' شورتس بهوكات AI ومدة ' + durationSec + 's!' : 'Generated ' + count + ' shorts with AI hook & ' + durationSec + 's duration!', 'ok');
+    }
+
+    function renderResults() {
+      const box = document.getElementById('resultBox');
+      box.classList.remove('hidden');
+      document.getElementById('resCount').textContent = currentClips.length + (LANG === 'ar' ? ' مقاطع شورتس جاهزة بهوكات AI 🔥' : ' Viral AI Shorts Ready 🔥');
+
+      const g = document.getElementById('resGrid');
+      g.innerHTML = '';
+      currentClips.forEach((c, idx) => {
+        g.appendChild(buildClipCard(c, idx, true));
+      });
+      box.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function buildClipCard(c, idx, isNew) {
+      const card = document.createElement('div');
+      card.className = 'rounded-3xl overflow-hidden border border-white/10 bg-black/40 card-hover flex flex-col justify-between';
+
+      card.innerHTML = `
+        <div class="shorts-frame !rounded-none !border-0 cursor-pointer relative" onclick="openPrev(${idx}, ${isNew})">
+          <img src="${c.seed}" onerror="this.src='${c.thumb}'" loading="lazy">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+          
+          <div class="absolute top-2.5 inset-x-2.5 flex justify-between items-center">
+            <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-pink-500 text-white shadow">
+              🎯 HOOK ${c.score}%
+            </span>
+            <span class="text-[10px] font-black bg-black/80 text-cyan-300 px-2 py-0.5 rounded-full font-mono">
+              ${c.dur}s ⏱️
+            </span>
+          </div>
+
+          <div class="absolute inset-0 grid place-items-center opacity-0 hover:opacity-100 transition bg-black/30">
+            <span class="w-12 h-12 rounded-full grid place-items-center text-lg text-white shadow-xl" style="background:linear-gradient(135deg,#7C3AED,#06B6D4)">
+              <i class="fa-solid fa-play ms-1"></i>
+            </span>
+          </div>
+
+          <div class="absolute bottom-2.5 inset-x-2.5">
+            <div class="text-[11px] font-black text-white leading-snug line-clamp-2">${c.title}</div>
+            <div class="text-[9px] text-cyan-300 font-bold mt-1 flex items-center justify-between">
+              <span>▶ يبدأ: ${c.start}</span>
+              <span class="font-mono text-yellow-300">${c.dur} ثانية</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 flex gap-2 border-t border-white/5">
+          <button onclick="openPrev(${idx}, ${isNew})" class="flex-1 neon-btn rounded-xl py-2 text-xs font-black text-white flex items-center justify-center gap-1">
+            <i class="fa-solid fa-play text-[10px]"></i> <span>معاينة</span>
+          </button>
+          <button onclick="toast('${LANG === 'ar' ? '⬇️ بدأ تنزيل الشورت بدقة 4K' : 'Starting 4K download'}', 'ok')" class="gold-btn rounded-xl px-3 py-2 text-xs font-bold" title="تحميل">
+            <i class="fa-solid fa-download"></i>
+          </button>
+        </div>
+      `;
+      return card;
+    }
+
+    function renderClips() {
+      const u = me();
+      if (!u) return;
+      const allMine = getVids().filter(v => v.email === u.email).flatMap(v => v.clips || []);
+      document.getElementById('clipsCount').textContent = allMine.length;
+
+      const g = document.getElementById('clipsGrid');
+      if (!allMine.length) {
+        g.innerHTML = `<div class="col-span-full text-center text-slate-500 text-xs md:text-sm py-12">
+          📭 لا توجد شورتس بعد — انتقل إلى "قص شورتس بهوك AI" وابدأ مجاناً الآن!
+        </div>`;
+        return;
+      }
+
+      g.innerHTML = '';
+      allMine.slice(0, 15).forEach((c, i) => {
+        g.appendChild(buildClipCard(c, i, false));
+      });
+    }
+
+    /* ============ PREVIEW PLAYER ============ */
+    let previewClipsPool = [];
+    function openPrev(idx, isNew) {
+      previewClipsPool = isNew ? currentClips : getVids().filter(v => v.email === me().email).flatMap(v => v.clips || []);
+      const clip = previewClipsPool[idx];
+      if (!clip) return;
+
+      document.getElementById('prevModal').classList.remove('hidden');
+      document.getElementById('prevScore').textContent = 'HOOK ' + clip.score + '% 🔥';
+      document.getElementById('prevDurBadge').textContent = clip.dur + 's ⏱️';
+      document.getElementById('prevTitle').textContent = clip.title;
+      document.getElementById('prevHookTypeLabel').textContent = 'نوع الهوك: ' + (clip.hookCat || 'Viral Hook');
+      document.getElementById('prevMeta').innerHTML = `
+        <div>⏱️ مدة الشورت: <b class="text-cyan-300 font-mono">${clip.dur} ثانية</b> (محددة يدويّاً)</div>
+        <div>▶ البداية من الفيديو الأصلي: <b class="text-white font-mono">${clip.start}</b></div>
+        <div>🎨 ستايل الترجمة: <b class="text-yellow-300 uppercase">${clip.tpl || 'MrBeast'}</b></div>
+      `;
+
+      const v = document.getElementById('prevVideo');
+      v.src = clip.video;
+      prevSrc = clip.video;
+      v.currentTime = 1;
+      v.play().catch(() => {});
+      document.getElementById('prevPlay').innerHTML = '<i class="fa-solid fa-pause"></i> إيقاف';
+
+      playCaptions(clip.cap);
+    }
+
+    function openPrevDemo() {
+      openPrev(0, true);
+      if (!currentClips.length) {
+        // Fallback demo short
+        document.getElementById('prevModal').classList.remove('hidden');
+        document.getElementById('prevScore').textContent = 'HOOK 99.2% 🔥';
+        document.getElementById('prevDurBadge').textContent = '35s ⏱️';
+        document.getElementById('prevTitle').textContent = 'هذا ما يحدث عندما تطبق هوك الإثارة بدقة!';
+        document.getElementById('prevHookTypeLabel').textContent = 'نمط: صدمة وفضول (Curiosity)';
+        document.getElementById('prevMeta').innerHTML = `
+          <div>⏱️ مدة الشورت: <b class="text-cyan-300 font-mono">35 ثانية</b> (محددة يدوياً)</div>
+          <div>▶ البداية: 04:12 • جودة 4K UHD</div>
+        `;
+        const v = document.getElementById('prevVideo');
+        v.src = SAMPLE_VIDEOS[0];
+        prevSrc = SAMPLE_VIDEOS[0];
+        v.play().catch(() => {});
+        playCaptions('لا تتخطى هذا الفيديو! النتيجة ستصدمك تماماً 🔥 انتظر النهاية');
+      }
+    }
+
+    function togglePrev() {
+      const v = document.getElementById('prevVideo');
+      if (v.paused) {
+        v.play();
+        document.getElementById('prevPlay').innerHTML = '<i class="fa-solid fa-pause"></i> إيقاف';
+      } else {
+        v.pause();
+        document.getElementById('prevPlay').innerHTML = '<i class="fa-solid fa-play"></i> تشغيل';
+      }
+    }
+
+    function closePrev() {
+      document.getElementById('prevModal').classList.add('hidden');
+      document.getElementById('prevVideo').pause();
+      clearInterval(playingCapTimer);
+    }
+
+    function downloadPrev() {
+      const a = document.createElement('a');
+      a.href = prevSrc || SAMPLE_VIDEOS[0];
+      a.download = 'clipgenius-hook-short-' + selectedDuration + 's.mp4';
+      a.target = '_blank';
+      a.click();
+      toast(LANG === 'ar' ? '⬇️ جارٍ تنزيل مقطع الشورت…' : 'Downloading MP4 Short…', 'ok');
+    }
+
+    function playCaptions(text) {
+      const box = document.getElementById('prevCap');
+      const words = text.split(' ');
+      let idx = 0;
+      clearInterval(playingCapTimer);
+      playingCapTimer = setInterval(() => {
+        box.innerHTML = words.map((w, i) =>
+          `<span class="caption-word ${i === idx % words.length ? 'on' : 'opacity-70'}">${w}</span>`
+        ).join(' ');
+        idx++;
+      }, 550);
+    }
+
+    /* ============ PAYMENTS (Visa / Mastercard / Binance) ============ */
+    function openPay() {
+      document.getElementById('payModal').classList.remove('hidden');
+    }
+
+    function closePay() {
+      document.getElementById('payModal').classList.add('hidden');
+    }
+
+    function pickPay(method) {
+      payMethod = method;
+      ['card', 'mastercard', 'binance'].forEach(m => {
+        const el = document.getElementById('pm-' + m);
+        if (el) el.classList.remove('active');
+      });
+      document.getElementById('pm-' + method).classList.add('active');
+
+      const isBin = method === 'binance';
+      document.getElementById('payCardForm').classList.toggle('hidden', isBin);
+      document.getElementById('payBinForm').classList.toggle('hidden', !isBin);
+
+      const btn = document.getElementById('payBtn');
+      if (isBin) {
+        btn.innerHTML = '✅ لقد أرسلت 6 USDT عبر Binance — تفعيل PRO الفوري';
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-lock me-1"></i> إتمام دفع 6$ وتفعيل باقة PRO';
+      }
+    }
+
+    function fmtCard(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 16);
+      input.value = v.replace(/(.{4})/g, '$1 ').trim();
+    }
+
+    function fmtExp(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 4);
+      if (v.length > 2) input.value = v.slice(0, 2) + '/' + v.slice(2);
+      else input.value = v;
+    }
+
+    function doPay() {
+      const u = me();
+      if (!u) return;
+
+      const btn = document.getElementById('payBtn');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> جارٍ معالجة الدفع المشفر…';
+      btn.disabled = true;
+
+      if (payMethod !== 'binance') {
+        const num = document.getElementById('ccNum').value.replace(/\s/g, '');
+        const name = document.getElementById('ccName').value.trim();
+        const exp = document.getElementById('ccExp').value;
+        const cvc = document.getElementById('ccCvc').value;
+
+        if (num.length < 16) {
+          toast(LANG === 'ar' ? '❌ رقم البطاقة غير مكتمل' : 'Card number incomplete', 'err');
+          btn.disabled = false;
+          pickPay(payMethod);
+          return;
+        }
+        if (!name) {
+          toast(LANG === 'ar' ? '❌ الرجاء إدخال الاسم على البطاقة' : 'Cardholder name required', 'err');
+          btn.disabled = false;
+          pickPay(payMethod);
+          return;
+        }
+        if (exp.length < 5 || cvc.length < 3) {
+          toast(LANG === 'ar' ? '❌ تحقق من تاريخ الانتهاء ورمز CVC' : 'Check expiry date and CVC', 'err');
+          btn.disabled = false;
+          pickPay(payMethod);
+          return;
+        }
+      }
+
+      setTimeout(() => {
+        btn.disabled = false;
+        closePay();
+
+        const newProUntil = Math.max(u.proUntil || 0, Date.now()) + 30 * 864e5; // +30 days
+        updateMe({
+          isPro: true,
+          proUntil: newProUntil,
+          spent: (u.spent || 0) + 6
+        });
+
+        // Record Transaction
+        const txList = getTx();
+        const methodLabel = payMethod === 'binance' ? 'Binance Pay (USDT)' : (payMethod === 'mastercard' ? 'Mastercard' : 'Visa');
+        txList.unshift({
+          id: 'tx_' + Date.now(),
+          email: u.email,
+          amount: 6,
+          method: methodLabel,
+          status: 'paid',
+          date: Date.now(),
+          label: 'اشتراك PRO شهري ($6)'
+        });
+        saveTx(txList);
+
+        // Check if this payment rewards a referrer (10 subscribers = 1 free month!)
+        const users = getUsers();
+        users.forEach(referrer => {
+          const inviteEntry = (referrer.invited || []).find(inv => inv.email === u.email && !inv.sub);
+          if (inviteEntry) {
+            inviteEntry.sub = true; // Mark as paid subscriber
+            referrer.paidRefs = (referrer.paidRefs || 0) + 1;
+
+            // Every 10 paid subscribers = 1 free PRO month (30 days)
+            if (referrer.paidRefs % 10 === 0) {
+              referrer.bonus = (referrer.bonus || 0) + 1;
+              referrer.isPro = true;
+              referrer.proUntil = Math.max(referrer.proUntil || 0, Date.now()) + 30 * 864e5;
+
+              txList.unshift({
+                id: 'tx_bonus_' + Date.now(),
+                email: referrer.email,
+                amount: 0,
+                method: '🎁 مكافأة 10 مشتركين',
+                status: 'bonus',
+                date: Date.now(),
+                label: 'شهر PRO مجاني (تم وصول 10 مشتركين!)'
+              });
+              saveTx(txList);
+            }
+          }
+        });
+        saveUsers(users);
+
+        triggerConfetti();
+        refreshDash();
+        toast(LANG === 'ar' ? '🎉 تم تفعيل باقة PRO لمدة 30 يوماً بنجاح! 👑' : '🎉 PRO membership activated for 30 days! 👑', 'ok');
+      }, 1500);
+    }
+
+    /* ============ REFERRAL & REWARDS (10 REFS = 1 FREE MONTH) ============ */
+    function renderRef() {
+      const u = me();
+      if (!u) return;
+
+      const refLink = window.location.origin + window.location.pathname + '#ref=' + u.refCode;
+      document.getElementById('myRefLink').textContent = refLink;
+      document.getElementById('myRefCode').textContent = u.refCode;
+
+      const paid = u.paidRefs || 0;
+      const progressInCycle = paid % 10;
+      const pct = (progressInCycle / 10) * 100;
+
+      document.getElementById('refProgLbl').textContent = `${progressInCycle} / 10 مشتركين (${paid} إجمالي)`;
+      document.getElementById('refProgBar').style.width = pct + '%';
+      document.getElementById('refBonusCount').textContent =
+        (LANG === 'ar' ? 'إجمالي الشهور المجانية التي كسبتها عبر الدعوات: ' : 'Total free months earned via invites: ') + (u.bonus || 0) + (LANG === 'ar' ? ' شهر 🎁' : ' month(s) 🎁');
+
+      const invListEl = document.getElementById('invList');
+      const invited = u.invited || [];
+      document.getElementById('invCount').textContent = invited.length;
+
+      if (!invited.length) {
+        invListEl.innerHTML = `<div class="text-slate-500 text-center py-4 text-xs">
+          لم ينضم أحد عبر رابطك بعد. شارك الرابط الآن وكل 10 يشتركون يمنحونك شهراً مجاناً!
+        </div>`;
+      } else {
+        invListEl.innerHTML = invited.map(inv => `
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-white/5">
+            <span class="font-mono text-slate-300">${inv.email}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${inv.sub ? 'bg-emerald-400 text-black' : 'bg-white/10 text-slate-400'}">
+              ${inv.sub ? '✅ اشترك بـ 6$ (محتسب)' : '⏳ تجريبي (لم يشترك بعد)'}
+            </span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function copyRef() {
+      const link = document.getElementById('myRefLink').textContent;
+      navigator.clipboard.writeText(link).then(() => {
+        toast(LANG === 'ar' ? 'تم نسخ رابط الدعوة الخاص بك! 🎁' : 'Invite link copied! 🎁', 'ok');
+      });
+    }
+
+    function shareRef(platform) {
+      const link = encodeURIComponent(document.getElementById('myRefLink').textContent);
+      const text = encodeURIComponent(LANG === 'ar' ? 'حوّل أي فيديو يوتيوب لشورتس بهوكات فيروسية وتحكم يدوي بالمدة عبر ClipGenius AI: ' : 'Turn YouTube videos into viral shorts with ClipGenius AI: ');
+      let url = '';
+      if (platform === 'whatsapp') url = `https://api.whatsapp.com/send?text=${text}%20${link}`;
+      if (platform === 'telegram') url = `https://t.me/share/url?url=${link}&text=${text}`;
+      if (platform === 'x') url = `https://twitter.com/intent/tweet?text=${text}&url=${link}`;
+      window.open(url, '_blank');
+    }
+
+    function demoInvite() {
+      const u = me();
+      if (!u) return;
+      const fakeEmail = 'friend_' + Math.floor(Math.random() * 899 + 100) + '@gmail.com';
+      u.invited = u.invited || [];
+      u.invited.unshift({ email: fakeEmail, date: Date.now(), sub: true });
+      u.paidRefs = (u.paidRefs || 0) + 1;
+
+      let gotBonus = false;
+      if (u.paidRefs % 10 === 0) {
+        u.bonus = (u.bonus || 0) + 1;
+        u.isPro = true;
+        u.proUntil = Math.max(u.proUntil || 0, Date.now()) + 30 * 864e5;
+        gotBonus = true;
+
+        const txs = getTx();
+        txs.unshift({
+          id: 'tx_b_' + Date.now(),
+          email: u.email,
+          amount: 0,
+          method: '🎁 مكافأة 10 مشتركين',
+          status: 'bonus',
+          date: Date.now(),
+          label: 'شهر PRO مجاني (اكتمل 10 مشتركين!)'
+        });
+        saveTx(txs);
+      }
+
+      updateMe(u);
+      renderRef();
+      refreshDash();
+
+      if (gotBonus) {
+        triggerConfetti();
+        toast(LANG === 'ar' ? '🏆 مبروك! وصلت لـ 10 مشتركين وحصلت على شهر PRO مجاناً!' : '🏆 Congrats! You hit 10 subs and earned 1 free PRO month!', 'ok');
+      } else {
+        toast((LANG === 'ar' ? '✅ تمت محاكاة اشتراك صديق جديد (' : 'Simulated 1 new subscriber (') + u.paidRefs + '/10)', 'ok');
+      }
+    }
+
+    /* ============ TRANSACTIONS LIST ============ */
+    function renderTx() {
+      const u = me();
+      if (!u) return;
+      const myTx = getTx().filter(t => t.email === u.email);
+      const tbody = document.getElementById('txBody');
+
+      if (!myTx.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500 text-xs">لا توجد فواتير حتى الآن</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = myTx.map(t => `
+        <tr class="border-b border-white/5">
+          <td class="py-3 px-2 font-bold">${t.label}</td>
+          <td class="py-3 px-2 font-mono ${t.amount > 0 ? 'text-emerald-300 font-black' : 'text-yellow-300 font-bold'}">
+            ${t.amount > 0 ? '$' + t.amount : 'مجاناً 🎁'}
+          </td>
+          <td class="py-3 px-2 text-slate-300">${t.method}</td>
+          <td class="py-3 px-2"><span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">مكتمل ✅</span></td>
+          <td class="py-3 px-2 text-slate-400 font-mono text-xs">${new Date(t.date).toLocaleDateString()}</td>
+        </tr>
+      `).join('');
+    }
+
+    function saveSettings() {
+      const name = document.getElementById('setName').value.trim();
+      const pass = document.getElementById('setPass').value;
+      const patch = {};
+      if (name) patch.name = name;
+      if (pass && pass.length >= 6) patch.pass = pass;
+      updateMe(patch);
+      refreshDash();
+      toast(LANG === 'ar' ? 'تم حفظ التعديلات بنجاح ✅' : 'Settings saved ✅', 'ok');
+    }
+
+    /* ============ ADMIN PANEL LOGIC ============ */
+    let chRevInstance = null;
+    let chPlansInstance = null;
+
+    function refreshAdmin() {
+      const users = getUsers();
+      const txs = getTx();
+      const vids = getVids();
+
+      const totalUsers = users.length;
+      const proUsers = users.filter(u => isPro(u)).length;
+      const mrr = proUsers * 6; // $6/month
+      const totalVideosCount = vids.reduce((acc, v) => acc + (v.count || 0), 0);
+      const totalBonuses = users.reduce((acc, u) => acc + (u.bonus || 0), 0);
+
+      document.getElementById('aUsers').textContent = totalUsers;
+      document.getElementById('aMrr').textContent = '$' + mrr;
+      document.getElementById('aSubs').textContent = proUsers + ' مشترك PRO نشط ($6)';
+      document.getElementById('aVideos').textContent = totalVideosCount + ' مقطع';
+      document.getElementById('aBonus').textContent = totalBonuses + ' شهر';
+
+      renderUsers();
+      renderAdminTx();
+      renderAdminCharts(proUsers, totalUsers - proUsers);
+    }
+
+    function renderUsers() {
+      const q = (document.getElementById('uSearch').value || '').trim().toLowerCase();
+      const filter = document.getElementById('uFilter').value;
+      const users = getUsers();
+
+      const filtered = users.filter(u => {
+        const matchesQ = u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.refCode && u.refCode.toLowerCase().includes(q));
+        if (!matchesQ) return false;
+        if (filter === 'pro') return isPro(u);
+        if (filter === 'free') return !isPro(u);
+        if (filter === 'admin') return u.role === 'admin';
+        return true;
+      });
+
+      const tbody = document.getElementById('usersBody');
+      tbody.innerHTML = filtered.map(u => `
+        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+          <td class="py-3 px-3">
+            <div class="font-black text-white">${u.name}</div>
+            <div class="text-[11px] font-mono text-slate-400">${u.email}</div>
+          </td>
+          <td class="py-3 px-3">
+            ${isPro(u)
+              ? '<span class="badge-pro text-[10px] px-2 py-0.5 rounded-full font-bold">PRO ($6)</span>'
+              : '<span class="text-[10px] bg-white/10 text-slate-300 px-2 py-0.5 rounded-full">FREE (5 vids)</span>'}
+          </td>
+          <td class="py-3 px-3 font-mono font-bold text-center ${isPro(u) ? 'text-yellow-300' : 'text-emerald-400'}">
+            ${isPro(u) ? '∞' : u.credits}
+          </td>
+          <td class="py-3 px-3 text-center font-mono">
+            <b class="text-cyan-300">${u.paidRefs || 0}</b> / 10
+          </td>
+          <td class="py-3 px-3 text-center font-mono font-bold text-yellow-300">
+            ${u.bonus || 0}
+          </td>
+          <td class="py-3 px-3 text-center font-mono text-emerald-400 font-bold">
+            $${u.spent || 0}
+          </td>
+          <td class="py-3 px-3">
+            <div class="flex gap-1.5 justify-center">
+              <button onclick="adminGrantPro('${u.email}')" class="glass-soft text-[10px] px-2 py-1 rounded-lg text-yellow-300 hover:bg-white/10 font-bold" title="منح شهر PRO مجاني">
+                +30 يوم PRO
+              </button>
+              <button onclick="adminResetCredits('${u.email}')" class="glass-soft text-[10px] px-2 py-1 rounded-lg text-cyan-300 hover:bg-white/10 font-bold" title="إعادة تعبئة 5 فيديوهات مجانية">
+                +5 مجاناً
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function adminGrantPro(email) {
+      const users = getUsers();
+      const u = users.find(x => x.email === email);
+      if (u) {
+        u.isPro = true;
+        u.proUntil = Math.max(u.proUntil || 0, Date.now()) + 30 * 864e5;
+        saveUsers(users);
+        refreshAdmin();
+        toast('تم منح 30 يوم PRO للمستخدم ' + email, 'ok');
+      }
+    }
+
+    function adminResetCredits(email) {
+      const users = getUsers();
+      const u = users.find(x => x.email === email);
+      if (u) {
+        u.credits = (u.credits || 0) + 5;
+        saveUsers(users);
+        refreshAdmin();
+        toast('تمت إضافة 5 فيديوهات مجانية للمستخدم ' + email, 'ok');
+      }
+    }
+
+    function renderAdminTx() {
+      const txs = getTx().slice(0, 10);
+      const container = document.getElementById('adminTx');
+      container.innerHTML = txs.map(t => `
+        <div class="p-2.5 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between text-xs">
+          <div>
+            <div class="font-bold text-white">${t.label}</div>
+            <div class="text-[10px] text-slate-400 font-mono">${t.email} • ${t.method}</div>
+          </div>
+          <div class="font-mono font-black ${t.amount > 0 ? 'text-emerald-300' : 'text-yellow-300'}">
+            ${t.amount > 0 ? '$' + t.amount : 'BONUS 🎁'}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderAdminCharts(proCount, freeCount) {
+      // Revenue Chart
+      const ctxRev = document.getElementById('chRev').getContext('2d');
+      if (chRevInstance) chRevInstance.destroy();
+      chRevInstance = new Chart(ctxRev, {
+        type: 'line',
+        data: {
+          labels: ['يوم 1', 'يوم 3', 'يوم 5', 'يوم 7', 'يوم 9', 'يوم 11', 'اليوم'],
+          datasets: [{
+            label: 'الإيرادات ($)',
+            data: [12, 24, 48, 66, 96, 120, Math.max(138, proCount * 6)],
+            borderColor: '#22D3EE',
+            backgroundColor: 'rgba(34, 211, 238, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8890B5' } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8890B5' } }
+          }
+        }
+      });
+
+      // Plans Donut Chart
+      const ctxPlans = document.getElementById('chPlans').getContext('2d');
+      if (chPlansInstance) chPlansInstance.destroy();
+      chPlansInstance = new Chart(ctxPlans, {
+        type: 'doughnut',
+        data: {
+          labels: ['مشتركون PRO ($6)', 'تجريبي مجاني (5 مقاطع)'],
+          datasets: [{
+            data: [proCount || 3, freeCount || 5],
+            backgroundColor: ['#FACC15', '#8B5CF6'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#E8ECFF', font: { family: 'Cairo' } } }
+          }
+        }
+      });
+    }
+
+    function exportCSV() {
+      const users = getUsers();
+      let csv = 'Name,Email,Role,IsPro,Credits,PaidRefs,BonusMonths,SpentUSD\n';
+      users.forEach(u => {
+        csv += `"${u.name}","${u.email}","${u.role}",${isPro(u)},${u.credits},${u.paidRefs || 0},${u.bonus || 0},${u.spent || 0}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'clipgenius_users.csv';
+      a.click();
+      toast('تم تنزيل تقرير CSV بنجاح 📊', 'ok');
+    }
+
+    /* ============ DYNAMIC UI BUILDERS (FAQ, FEATS, LOGOS) ============ */
+    function buildFaq() {
+      const items = [
+        {
+          q: LANG === 'ar' ? 'كيف تعمل التجربة المجانية؟' : 'How does the free trial work?',
+          a: LANG === 'ar' ? 'تحصل فور تسجيل حسابك على 5 فيديوهات مجانية كاملة لتجربة القص، ترجمة الكاريوكي، والتحكم اليدوي بالمدة (10-90 ثانية) بدون إدخال أي بطاقة بنكية.' : 'You instantly get 5 free YouTube videos to test AI hooks, vertical reframing, and manual duration controls with no credit card required.'
+        },
+        {
+          q: LANG === 'ar' ? 'ما هي تكلفة الاشتراك بعد انتهاء التجربة المجانية؟' : 'What is the cost after the trial?',
+          a: LANG === 'ar' ? 'الاشتراك الشهري بسيط وشفاف بقيمة 6$ فقط شهرياً، ويمنحك تحويلات غير محدودة، جودة 4K، وتوليد غير محدود للهوكات.' : 'Just $6 per month! It unlocks unlimited YouTube video conversions, 4K exports, and all AI hook categories.'
+        },
+        {
+          q: LANG === 'ar' ? 'كيف يعمل نظام مكافأة الـ 10 مشتركين = شهر مجاني؟' : 'How does the 10 referrals = 1 free month work?',
+          a: LANG === 'ar' ? 'لكل مستخدم رابط وكود دعوة خاص. عندما يشترك 10 أشخاص عبر رابطك في باقة الـ 6$، يضاف إلى حسابك تلقائياً شهر كامل مجاناً من باقة PRO.' : 'You get a unique referral link. When 10 people subscribe to the $6 plan using your link, your account is automatically credited with 1 free PRO month.'
+        },
+        {
+          q: LANG === 'ar' ? 'ما هي طرق الدفع المتوفرة؟' : 'What payment methods are supported?',
+          a: LANG === 'ar' ? 'ندعم البطاقات المصرفية الدولية Visa و MasterCard، بالإضافة إلى الدفع الفوري بالعملات المشفرة عبر Binance Pay (USDT).' : 'We support Visa, MasterCard, and direct crypto checkouts via Binance Pay (USDT).'
+        },
+        {
+          q: LANG === 'ar' ? 'هل يمكنني تحديد مدة مقطع الشورت يدوياً؟' : 'Can I manually control the duration of shorts?',
+          a: LANG === 'ar' ? 'نعم بكل تأكيد! يمكنك تحديد المدة بالثانية من 10 إلى 90 ثانية أو الاختيار السريع (15s، 30s، 45s، 60s) وسيقوم الذكاء الاصطناعي بضبط الهوك والمونتاج على هذه المدة بالضبط.' : 'Yes! You have full manual control between 10s and 90s, or fast presets (15s, 30s, 45s, 60s).'
+        }
+      ];
+
+      const box = document.getElementById('faqBox');
+      box.innerHTML = items.map((f, i) => `
+        <div class="glass rounded-2xl overflow-hidden cursor-pointer" onclick="this.classList.toggle('faq-open')">
+          <div class="p-4 md:p-5 flex items-center justify-between font-bold text-sm md:text-base">
+            <span>${f.q}</span>
+            <i class="fa-solid fa-plus faq-icon text-cyan-300"></i>
+          </div>
+          <div class="faq-a px-4 md:px-5 pb-4 text-xs md:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-3">
+            ${f.a}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function buildFeatures() {
+      const feats = [
+        { icon: 'fa-bullhorn', color: 'from-pink-500 to-rose-600', t: 'محرك الهوكات الخاطفة (AI Hooks)', d: 'يحلل مشاعر المتحدث والوقفات ويستخرج الهوك الذي يحقق أعلى معدل نقر واحتفاظ في أول 3 ثوانٍ.' },
+        { icon: 'fa-clock', color: 'from-cyan-500 to-blue-600', t: 'تحكم يدوي دقيق بالمدة (10-90s)', d: 'حدد بالثانية مدة الشورت لتتوافق مع إستراتيجيتك لخوارزميات تيك توك، ريلز، ويوتيوب شورتس.' },
+        { icon: 'fa-font', color: 'from-yellow-400 to-amber-600', t: 'ترجمة كاريوكي بأسلوب MrBeast', d: 'كلمات ملونة متحركة تتزامن مع النبرة الصوتية باللغات العربية والإنجليزية والفرنسية.' },
+        { icon: 'fa-crop-simple', color: 'from-violet-500 to-purple-700', t: 'تأطير عمودي 9:16 بتتبع الوجوه', d: 'الذكاء الاصطناعي يركز الكاميرا تلقائياً على المتحدث حتى في المقابلات والبودكاست متعدد الضيوف.' },
+        { icon: 'fa-gift', color: 'from-emerald-400 to-teal-600', t: 'نظام مكافآت كريم (10 = شهر مجاناً)', d: 'نظام إحالة دقيق يمنحك شهراً مجانياً عن كل 10 مشتركين دون أي سقف للمكافآت.' },
+        { icon: 'fa-credit-card', color: 'from-indigo-500 to-sky-500', t: 'دفع عالمي مرن (Visa, MC, Binance)', d: 'دفع آمن 100% بالبطاقات البنكية أو العملات الرقمية عبر Binance Pay بـ 6$ شهرياً فقط.' }
+      ];
+
+      const grid = document.getElementById('featGrid');
+      grid.innerHTML = feats.map(f => `
+        <div class="glass rounded-3xl p-6 card-hover flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-2xl grid place-items-center text-xl text-white bg-gradient-to-tr ${f.color} mb-4 shadow-lg">
+              <i class="fa-solid ${f.icon}"></i>
+            </div>
+            <h3 class="font-black text-base text-white mb-2">${f.t}</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">${f.d}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderLogos() {
+      const names = ['MrBeast Style', 'TikTok Viral', 'YouTube Shorts', 'Instagram Reels', 'OpenAI Whisper', 'GPT-4o Vision', 'Binance Pay', 'Mastercard Secure'];
+      const m = document.getElementById('logoMarquee');
+      m.innerHTML = names.concat(names).map(n => `
+        <div class="glass-soft px-5 py-2.5 rounded-xl text-xs font-bold text-slate-300 flex items-center gap-2 whitespace-nowrap">
+          <span class="w-2 h-2 rounded-full bg-cyan-400"></span> ${n}
+        </div>
+      `).join('');
+    }
+
+    /* ============ PARTICLES CANVAS BACKGROUND ============ */
+    function initParticles() {
+      const c = document.getElementById('particles');
+      const ctx = c.getContext('2d');
+      let w = c.width = window.innerWidth;
+      let h = c.height = window.innerHeight;
+
+      window.addEventListener('resize', () => {
+        w = c.width = window.innerWidth;
+        h = c.height = window.innerHeight;
+      });
+
+      const parts = Array.from({ length: 45 }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 2 + 0.8,
+        dx: (Math.random() - 0.5) * 0.4,
+        dy: (Math.random() - 0.5) * 0.4
+      }));
+
+      function anim() {
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = 'rgba(139, 92, 246, 0.4)';
+        parts.forEach(p => {
+          p.x += p.dx;
+          p.y += p.dy;
+          if (p.x < 0) p.x = w;
+          if (p.x > w) p.x = 0;
+          if (p.y < 0) p.y = h;
+          if (p.y > h) p.y = 0;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        requestAnimationFrame(anim);
+      }
+      anim();
+    }
+
+    /* ============ TOAST NOTIFICATIONS & CONFETTI ============ */
+    function toast(msg, type = 'ok') {
+      const box = document.getElementById('toasts');
+      const el = document.createElement('div');
+      el.className = `toast glass p-3.5 rounded-2xl text-xs font-black shadow-2xl flex items-center gap-2.5 border ${
+        type === 'ok' ? 'border-cyan-400/40 text-cyan-200' : 'border-red-400/40 text-red-200'
+      }`;
+      el.innerHTML = `<span>${type === 'ok' ? '✨' : '⚠️'}</span> <span class="flex-1">${msg}</span>`;
+      box.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(10px)';
+        el.style.transition = '0.3s';
+        setTimeout(() => el.remove(), 300);
+      }, 3500);
+    }
+
+    function triggerConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 90,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+    }
+
+    /* ============ AI ASSISTANT CHAT ENGINE ============ */
+    function sendChat() {
+      const input = document.getElementById('chatIn');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const body = document.getElementById('chatBody');
+      const userMsg = document.createElement('div');
+      userMsg.className = 'chat-msg bg-cyan-500/20 text-cyan-200 border border-cyan-400/30 rounded-2xl rounded-ee-sm p-2.5 text-xs ms-8';
+      userMsg.textContent = text;
+      body.appendChild(userMsg);
+      input.value = '';
+      body.scrollTop = 9999;
+
+      setTimeout(() => {
+        const botMsg = document.createElement('div');
+        botMsg.className = 'chat-msg bg-white/10 rounded-2xl rounded-ss-sm p-2.5 text-xs leading-relaxed me-6';
+        
+        const t = text.toLowerCase();
+        let reply = 'أنا هنا لمساعدتك! يمكنك لصق أي رابط يوتيوب لتحويله فوراً لشورتس مع تحديد المدة (15s، 30s، 60s) واختيار هوك AI لزيادة المشاهدات.';
+        if (t.includes('سعر') || t.includes('اشتراك') || t.includes('price') || t.includes('prix')) {
+          reply = 'تبدأ التجربة بـ 5 فيديوهات مجانية تماماً بدون بطاقة، ثم اشتراك شهري مخفض بقيمة 6$ فقط شهرياً مع إمكانية الإلغاء بأي وقت.';
+        } else if (t.includes('دعوة') || t.includes('مكافأة') || t.includes('referral') || t.includes('10')) {
+          reply = 'نظام المكافآت رائع جداً: كل 10 مشتركين يسجلون عبر رابطك الخاص يمنحونك شهراً كاملاً من باقة PRO مجاناً تلقائياً!';
+        } else if (t.includes('مدة') || t.includes('duration') || t.includes('ثانية')) {
+          reply = 'يمكنك تحديد مدة الشورت يدوياً من 10 إلى 90 ثانية أو اختيار أزرار الضبط السريع (15، 30، 45، 60 ثانية) من لوحة التحكم.';
+        } else if (t.includes('دفع') || t.includes('pay') || t.includes('binance') || t.includes('visa')) {
+          reply = 'ندعم بطاقات Visa، Mastercard، والدفع بالعملات الرقمية المشفرة عبر Binance Pay (USDT) مع تفعيل فوري.';
+        }
+
+        botMsg.innerHTML = '🤖 ' + reply;
+        body.appendChild(botMsg);
+        body.scrollTop = 9999;
+      }, 600);
+    }
+
+    /* ============ INITIALIZATION ============ */
+    window.addEventListener('DOMContentLoaded', () => {
+      initParticles();
+      setLang(LANG);
+
+      // Check URL for referral hash e.g. #ref=DEMO-7X2K
+      const hash = window.location.hash;
+      if (hash && hash.includes('ref=')) {
+        const refCode = hash.split('ref=')[1].split('&')[0];
+        sessionStorage.setItem('pendingRef', refCode);
+        showView('auth');
+        authTab('reg');
+        const refInput = document.getElementById('rg_ref');
+        if (refInput) refInput.value = refCode;
+        toast('🎁 تم تطبيق كود الإحالة: ' + refCode, 'ok');
+      }
+
+      // If user session exists, update nav
+      if (me()) {
+        document.getElementById('navAuthBtn').textContent = (LANG === 'ar' ? 'لوحة التحكم 🚀' : 'Dashboard 🚀');
+        document.getElementById('navAuthBtn').onclick = () => showView('dash');
+      }
+    });
+  </script>
+</body>
+</html>
